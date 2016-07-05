@@ -1,0 +1,17 @@
+class Game functions
+add_score()
+destroy()
+update_leaderboard()
+update_graph()
+get_editor()
+
+matplotlib
+
+# Have to add a check to make sure that the selected file is .sqlite3 only in tkinter.filedialog
+
+Rememember to process the name before adding it to the table as a column
+Like, 'alpha beta' -> 'game_alpha_beta'
+
+******************************************
+Make the sorting algorithm a bit (a lot) better while adding Olympics style ranking
+******************************************
