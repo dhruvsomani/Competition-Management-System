@@ -74,7 +74,7 @@ class Game(object):
         self.menu.post(event.x_root, event.y_root)
 
     def destroy(self, connection):
-        to_delete = tkinter.messagebox.askyesno('Delete Game', 'Are you sure you want to delete this game? '
+        to_delete = tkinter.messagebox.askyesno('Delete Game', 'Are you sure you want to delete this game?'
                                                                'This action is irreversible.')
 
         if to_delete:
