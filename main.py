@@ -93,6 +93,7 @@ def new_game(event=None):
 #######################################
 root = tkinter.Tk()
 root.title('Fun Marathon')
+root.iconbitmap('dsicon.ico')
 root.state('zoomed')
 root.bind('<Control-n>', new_game)
 root.bind('<Control-N>', new_game)
