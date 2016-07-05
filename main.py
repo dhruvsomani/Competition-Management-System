@@ -56,9 +56,10 @@ connection.execute('''CREATE TABLE IF NOT EXISTS PLAYERS (
                     GENDER VARCHAR(1),
                     CATEGORY VARCHAR(1));''')
 
-
 def create_game(name, coordinator, connection, new=True, game_data=None):
         game = objects.Game(name, coordinator, connection, new)
+        if game == False:
+            return
 
         notebook.add(game.frame, text=game.name, underline=0, sticky=tkinter.NS)
 
