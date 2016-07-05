@@ -20,12 +20,9 @@ class Game(object):
         # DATABASE
         #######################################
         if new:
-            try:
-                connection.execute('INSERT INTO GAMES VALUES(?, ?);', (name, coordinator))
-                connection.execute('ALTER TABLE PLAYERS ADD ' + process_name(self.name) + ' INTEGER;')
-                connection.commit()
-            except:
-                pass
+            connection.execute('INSERT INTO GAMES VALUES(?, ?);', (name, coordinator))
+            connection.execute('ALTER TABLE PLAYERS ADD ' + process_name(self.name) + ' INTEGER;')
+            connection.commit()
 
         #######################################
         # FRAME
@@ -35,14 +32,14 @@ class Game(object):
         tkinter.Label(self.frame, text=(self.name+' by '+self.coordinator),
                       font=('Arial', 36)).grid(row=1, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
-        self.tree = tkinter.ttk.Treeview(self.frame, columns=('ID', 'Name', 'Score'), show='headings')
+        self.tree = tkinter.ttk.Treeview(self.frame, columns=('ID', 'Name', 'Score'), show='headings', height=5)
         self.tree.grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
         self.tree.heading('ID', text="ID")
         self.tree.column("ID", width=96, anchor=tkinter.CENTER)
         self.tree.heading('Name', text="Name")
-        self.tree.column("Name", width=128, anchor=tkinter.CENTER)
+        self.tree.column("Name", width=256, anchor=tkinter.CENTER)
         self.tree.heading('Score', text="Score")
-        self.tree.column("Score", width=128, anchor=tkinter.CENTER)
+        self.tree.column("Score", width=96, anchor=tkinter.CENTER)
 
         tkinter.Label(self.frame, text='ID:', font=('Courier New', 16, 'bold')).grid(row=4, column=1)
         self.id = tkinter.Entry(self.frame, width=8, font=('Courier New', 16, 'bold'))
@@ -74,12 +71,11 @@ class Game(object):
         self.menu.post(event.x_root, event.y_root)
 
     def destroy(self, connection):
-        to_delete = tkinter.messagebox.askyesno('Delete Game', 'Are you sure you want to delete this game?'
+        to_delete = tkinter.messagebox.askyesno('Delete Game', 'Are you sure you want to delete this game? '
                                                                'This action is irreversible.')
 
         if to_delete:
-            connection.execute('DELETE FROM GAMES WHERE NAME = ' + self.name + ';')
-            connection.execute('ALTER TABLE PLAYERS DROP COLUMN ' + process_name(self.name) + ';')
+            connection.execute('DELETE FROM GAMES WHERE NAME = "' + self.name + '";')
             connection.commit()
             self.frame.destroy()
 
@@ -94,7 +90,8 @@ class Game(object):
             return
 
         try:
-            connection.execute('UPDATE PLAYERS SET ' + process_name(player_game) + ' = ' + player_score + ' WHERE ID = ' + player_id + ';')
+            connection.execute('UPDATE PLAYERS SET ' + process_name(player_game) + ' = ' +
+                               player_score + ' WHERE ID = ' + player_id + ';')
             connection.commit()
         except sqlite3.OperationalError as error:
             self.warner.config(text='SQLite Error: '+str(error))
@@ -106,5 +103,7 @@ class Game(object):
 
     def update_leaderboard(self, connection):
         self.tree.delete(*self.tree.get_children())
-        for (id, player, score) in connection.execute('SELECT ID, NAME, ' + process_name(self.name) + ' FROM PLAYERS ORDER BY ' + process_name(self.name) + ' DESC LIMIT 3'):
+        for (id, player, score) in connection.execute('SELECT ID, NAME, ' + process_name(self.name) +
+                                                        ' FROM PLAYERS ORDER BY ' + process_name(self.name) +
+                                                        ' DESC LIMIT 3'):
             self.tree.insert('', tkinter.END, values=(id, player, score))

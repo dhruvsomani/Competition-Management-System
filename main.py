@@ -56,15 +56,18 @@ connection.execute('''CREATE TABLE IF NOT EXISTS PLAYERS (
                     GENDER VARCHAR(1),
                     CATEGORY VARCHAR(1));''')
 
+
 def create_game(name, coordinator, connection, new=True, game_data=None):
         game = objects.Game(name, coordinator, connection, new)
-        if game == False:
+
+        if not game:
             return
 
         notebook.add(game.frame, text=game.name, underline=0, sticky=tkinter.NS)
 
         if game_data is not None:
             game_data.destroy()
+
 
 
 def new_game(event=None):
@@ -115,6 +118,38 @@ root.config(menu=menu)
 notebook = tkinter.ttk.Notebook(root, height=root.winfo_screenheight(), width=root.winfo_screenwidth())
 notebook.enable_traversal()
 notebook.grid(row=1, column=1, padx=4, pady=4)
+
+#######################################
+# MAIN BOARD
+#######################################
+main_board = tkinter.Frame()
+
+tkinter.Label(main_board, text=('Main Board'),
+              font=('Arial', 36)).grid(row=1, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+
+leader_tree = tkinter.ttk.Treeview(main_board, columns=('ID', 'Name', 'Score'), show='headings', height=5)
+leader_tree.grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+leader_tree.heading('ID', text="ID")
+leader_tree.column("ID", width=96, anchor=tkinter.CENTER)
+leader_tree.heading('Name', text="Name")
+leader_tree.column("Name", width=256, anchor=tkinter.CENTER)
+leader_tree.heading('Score', text="Score")
+leader_tree.column("Score", width=96, anchor=tkinter.CENTER)
+
+# tkinter.Label(self.frame, text='ID:', font=('Courier New', 16, 'bold')).grid(row=4, column=1)
+# self.id = tkinter.Entry(self.frame, width=8, font=('Courier New', 16, 'bold'))
+# self.id.grid(row=5, column=1, padx=4)
+#
+# tkinter.Label(self.frame, text='Points:', font=('Courier New', 16, 'bold')).grid(row=4, column=2)
+# self.score = tkinter.Entry(self.frame, width=8, font=('Courier New', 16, 'bold'))
+# self.score.grid(row=5, column=2, padx=4)
+#
+# self.submit = tkinter.ttk.Button(self.frame, text='Submit', command=lambda: self.add_score(connection))
+# self.submit.bind('<Enter>', lambda event: self.add_score(connection))
+# self.submit.bind('<Return>', lambda event: self.add_score(connection))
+# self.submit.grid(row=5, column=3, padx=4)
+
+notebook.add(main_board, text='Main Board', underline=0, sticky=tkinter.NS)
 
 #######################################
 # PRE-LAUNCH
