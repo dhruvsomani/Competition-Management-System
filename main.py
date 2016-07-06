@@ -69,8 +69,7 @@ def create_game(name, coordinator, connection, new=True, game_data=None):
             game_data.destroy()
 
 
-
-def new_game(event=None):
+def new_game(*ignore):
     game_data = tkinter.Toplevel(root)
     game_data.title('New Game...')
 
@@ -90,6 +89,10 @@ def new_game(event=None):
     submit.grid(row=3, column=1, columnspan=2)
 
     name.focus_set()
+
+
+def process_name(string):
+    return 'game_' + string.replace(' ', '_').replace("'", '').replace('"', '')
 
 #######################################
 # MENU BAR
@@ -124,17 +127,68 @@ notebook.grid(row=1, column=1, padx=4, pady=4)
 #######################################
 main_board = tkinter.Frame()
 
-tkinter.Label(main_board, text=('Main Board'),
+tkinter.Label(main_board, text='Main Board',
               font=('Arial', 36)).grid(row=1, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
-leader_tree = tkinter.ttk.Treeview(main_board, columns=('ID', 'Name', 'Score'), show='headings', height=5)
-leader_tree.grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
-leader_tree.heading('ID', text="ID")
-leader_tree.column("ID", width=96, anchor=tkinter.CENTER)
-leader_tree.heading('Name', text="Name")
-leader_tree.column("Name", width=256, anchor=tkinter.CENTER)
-leader_tree.heading('Score', text="Score")
-leader_tree.column("Score", width=96, anchor=tkinter.CENTER)
+
+tkinter.Label(main_board, text='Games',
+              font=('Arial', 24)).grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+
+game_tree = tkinter.ttk.Treeview(main_board, columns=('Game', 'Coordinator', 'Played By', 'Maximum Score'),
+                                 show='headings', height=5, selectmode=tkinter.NONE)
+game_tree.grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+game_tree.heading('Game', text='Game')
+game_tree.column('Game', width=192, anchor=tkinter.CENTER)
+game_tree.heading('Coordinator', text='Coordinator')
+game_tree.column('Coordinator', width=192, anchor=tkinter.CENTER)
+game_tree.heading('Played By', text='Played By')
+game_tree.column('Played By', width=96, anchor=tkinter.CENTER)
+game_tree.heading('Maximum Score', text='Maximum Score')
+game_tree.column('Maximum Score', width=96, anchor=tkinter.CENTER)
+game_tree.after(10000, lambda: update_game_tree(connection))
+
+
+def update_game_tree(connection):
+    game_tree.delete(*game_tree.get_children())
+    for (game_name, game_coordinator) in connection.execute('SELECT * FROM GAMES;'):
+        played_by = connection.execute('SELECT COUNT(*) FROM PLAYERS WHERE ' +
+                                       process_name(game_name) + ' IS NOT NULL').fetchall()
+        max_score = connection.execute('SELECT MAX(' + process_name(game_name) + ') FROM PLAYERS;').fetchall()
+        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, played_by[0], max_score[0]))
+    if len(game_tree.get_children()) > game_tree.cget('height'):
+        game_tree.config(height=len(game_tree.get_children()))
+    game_tree.after(10000, lambda: update_game_tree(connection))
+
+
+tkinter.Label(main_board, text='Top Players',
+              font=('Arial', 24)).grid(row=4, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+
+leader_tree = tkinter.ttk.Treeview(main_board, columns=('Rank', 'ID', 'Name', 'Score', 'Average'),
+                                   show='headings', height=5, selectmode=tkinter.NONE)
+leader_tree.grid(row=5, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+leader_tree.heading('Rank', text='Rank')
+leader_tree.column('Rank', width=96, anchor=tkinter.CENTER)
+leader_tree.heading('ID', text='ID')
+leader_tree.column('ID', width=96, anchor=tkinter.CENTER)
+leader_tree.heading('Name', text='Name')
+leader_tree.column('Name', width=256, anchor=tkinter.CENTER)
+leader_tree.heading('Score', text='Score')
+leader_tree.column('Score', width=96, anchor=tkinter.CENTER)
+leader_tree.heading('Average', text='Average')
+leader_tree.column('Average', width=96, anchor=tkinter.CENTER)
+
+
+def update_leader_tree(connection):
+    leader_tree.delete(*leader_tree.get_children())
+    columns = ['COALESCE(' + process_name(item.__getitem__(0)).upper() + ', 0)' for item in connection.execute('SELECT NAME FROM GAMES;').fetchall()]
+    num_of_games = len(columns)
+    columns = '(' + ' + '.join(columns) + ')'
+    for player in connection.execute('SELECT ROWID, ID, NAME,' + columns +
+                                             ' FROM PLAYERS ORDER BY ' + columns + 'DESC LIMIT 5;'):
+        leader_tree.insert('', tkinter.END, values=(player + (round(player[-1]/num_of_games, 2),)))
+    if len(leader_tree.get_children()) > leader_tree.cget('height'):
+        leader_tree.config(height=len(leader_tree.get_children()))
+    leader_tree.after(10000, lambda: update_leader_tree(connection))
 
 # tkinter.Label(self.frame, text='ID:', font=('Courier New', 16, 'bold')).grid(row=4, column=1)
 # self.id = tkinter.Entry(self.frame, width=8, font=('Courier New', 16, 'bold'))
@@ -156,6 +210,9 @@ notebook.add(main_board, text='Main Board', underline=0, sticky=tkinter.NS)
 #######################################
 for (game_name, game_coordinator) in connection.execute('SELECT * FROM GAMES;'):
     create_game(game_name, game_coordinator, connection, new=False)
+
+update_game_tree(connection)
+update_leader_tree(connection)
 
 
 #######################################

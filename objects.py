@@ -32,7 +32,8 @@ class Game(object):
         tkinter.Label(self.frame, text=(self.name+' by '+self.coordinator),
                       font=('Arial', 36)).grid(row=1, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
-        self.tree = tkinter.ttk.Treeview(self.frame, columns=('ID', 'Name', 'Score'), show='headings', height=5)
+        self.tree = tkinter.ttk.Treeview(self.frame, columns=('ID', 'Name', 'Score'), show='headings',
+                                         height=5, selectmode=tkinter.NONE)
         self.tree.grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
         self.tree.heading('ID', text="ID")
         self.tree.column("ID", width=96, anchor=tkinter.CENTER)
@@ -66,6 +67,7 @@ class Game(object):
 
         self.warner = tkinter.Label(self.frame)
         self.warner.grid(row=6, column=1, columnspan=3)
+
 
     def show_menu(self, event):
         self.menu.post(event.x_root, event.y_root)
