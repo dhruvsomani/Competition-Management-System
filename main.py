@@ -179,21 +179,21 @@ leader_tree.heading('Average', text='Average')
 leader_tree.column('Average', width=96, anchor=tkinter.CENTER)
 
 sort_by = tkinter.ttk.Labelframe(main_board, text='Sorting Options')
-family = tkinter.StringVar()
-gender = tkinter.StringVar()
-category = tkinter.StringVar()
+family = tkinter.StringVar(value='"BOTH"')
+gender = tkinter.StringVar(value='"GENDER"')
+category = tkinter.StringVar(value='"CATEGORY"')
 
-tkinter.Radiobutton(sort_by, text='Both', variable=family, value='', anchor=tkinter.W).grid(row=1, column=1)
-tkinter.Radiobutton(sort_by, text='Somanis', variable=family, value='somani', anchor=tkinter.W).grid(row=1, column=2)
-tkinter.Radiobutton(sort_by, text='Bahetis', variable=family, value='baheti', anchor=tkinter.W).grid(row=1, column=3)
+tkinter.Radiobutton(sort_by, text='Both', variable=family, value='"BOTH"').grid(row=1, column=1)
+tkinter.Radiobutton(sort_by, text='Somanis', variable=family, value='\'somani\'').grid(row=1, column=2)
+tkinter.Radiobutton(sort_by, text='Bahetis', variable=family, value='\'baheti\'').grid(row=1, column=3)
 
-tkinter.Radiobutton(sort_by, text='Both', variable=gender, value='', anchor=tkinter.CENTER).grid(row=2, column=1)
-tkinter.Radiobutton(sort_by, text='Male', variable=gender, value='M', anchor=tkinter.CENTER).grid(row=2, column=2)
-tkinter.Radiobutton(sort_by, text='Female', variable=gender, value='F', anchor=tkinter.CENTER).grid(row=2, column=3)
+tkinter.Radiobutton(sort_by, text='Both', variable=gender, value='"GENDER"', command=lambda: update_leader_tree(connection)).grid(row=2, column=1)
+tkinter.Radiobutton(sort_by, text='Male', variable=gender, value='\'M\'', command=lambda: update_leader_tree(connection)).grid(row=2, column=2)
+tkinter.Radiobutton(sort_by, text='Female', variable=gender, value='\'F\'', command=lambda: update_leader_tree(connection)).grid(row=2, column=3)
 
-tkinter.Radiobutton(sort_by, text='Both', variable=category, value='', anchor=tkinter.E).grid(row=3, column=1)
-tkinter.Radiobutton(sort_by, text='Category 1', variable=category, value='1', anchor=tkinter.E).grid(row=3, column=2)
-tkinter.Radiobutton(sort_by, text='Category 2', variable=category, value='2', anchor=tkinter.E).grid(row=3, column=3)
+tkinter.Radiobutton(sort_by, text='Both', variable=category, value='"CATEGORY"', command=lambda: update_leader_tree(connection)).grid(row=3, column=1)
+tkinter.Radiobutton(sort_by, text='Category 1', variable=category, value='\'1\'', command=lambda: update_leader_tree(connection)).grid(row=3, column=2)
+tkinter.Radiobutton(sort_by, text='Category 2', variable=category, value='\'2\'', command=lambda: update_leader_tree(connection)).grid(row=3, column=3)
 
 sort_by.grid(row=6, column=1, columnspan=3, sticky=tkinter.EW)
 
@@ -212,8 +212,12 @@ def update_leader_tree(connection):
     games_played = ' + '.join(games_played)
     rank = 1
 
-    for player in connection.execute('SELECT ID, NAME, %s, %s FROM PLAYERS ORDER BY %s DESC LIMIT 5;' %
-                                             (games_played, columns, columns)):
+    fam = family.get()
+    gen = gender.get()
+    cat = category.get()
+
+    for player in connection.execute('SELECT ID, NAME, %s, %s FROM PLAYERS WHERE UPPER(GENDER) = UPPER(%s) AND CATEGORY = %s'
+                                     ' ORDER BY %s DESC LIMIT 5;' % (games_played, columns, gen, cat, columns)):
         leader_tree.insert('', tkinter.END, values=((rank,) + player) + ('%.2f' % round(player[-1]/player[-2], 2),))
         rank += 1
 
