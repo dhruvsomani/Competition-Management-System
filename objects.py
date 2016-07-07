@@ -20,8 +20,8 @@ class Game(object):
         # DATABASE
         #######################################
         if new:
-            connection.execute('INSERT INTO GAMES VALUES(?, ?);', (name, coordinator))
             connection.execute('ALTER TABLE PLAYERS ADD ' + process_name(self.name) + ' INTEGER;')
+            connection.execute('INSERT INTO GAMES VALUES(?, ?);', (name, coordinator))
             connection.commit()
 
         #######################################
@@ -68,7 +68,6 @@ class Game(object):
         self.warner = tkinter.Label(self.frame)
         self.warner.grid(row=6, column=1, columnspan=3)
 
-
     def show_menu(self, event):
         self.menu.post(event.x_root, event.y_root)
 
@@ -102,6 +101,8 @@ class Game(object):
 
         self.id.delete(0, tkinter.END)
         self.score.delete(0, tkinter.END)
+
+        self.id.focus_set()
 
     def update_leaderboard(self, connection):
         self.tree.delete(*self.tree.get_children())

@@ -15,3 +15,10 @@ Like, 'alpha beta' -> 'game_alpha_beta'
 ******************************************
 Make the sorting algorithm a bit (a lot) better while adding Olympics style ranking
 ******************************************
+
+TO DO:
+1) ADD A `GAMES PLAYED` COLUMN IN LEADER_TREE AND CORRECT AVERAGE ................................ DONE
+2) ADD THE NAME OF THE PERSON WHO HAS ACHIEVED MAXIMUM SCORE IN GAME_TREE
+3) GAME ALPHA APPEARING IN GAME_TREE WHILE NO TAB
+4) ADD SORTER
+5) PLAYERWISE RESULT, ADD A NEW TAB. COLUMNS GAME_NAME, GAME_SCORE, TOTAL
