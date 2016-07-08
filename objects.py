@@ -117,6 +117,6 @@ class Game(object):
 
         columns = ' + '.join(columns)
 
-        for (id, player, score) in connection.execute('SELECT ID, NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 3' %
+        for (id, player, score) in connection.execute('SELECT ID, NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 5' %
                                                       (process_name(self.name), process_name(self.name), columns)):
             self.tree.insert('', tkinter.END, values=(id, player, score))

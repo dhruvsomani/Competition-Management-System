@@ -117,8 +117,8 @@ root.config(menu=menu)
 #######################################
 # NOTEBOOK
 #######################################
-style = tkinter.ttk.Style()
-style.theme_use('clam')
+# style = tkinter.ttk.Style()
+# style.theme_use('clam')
 
 notebook = tkinter.ttk.Notebook(root, height=root.winfo_screenheight(), width=root.winfo_screenwidth())
 notebook.enable_traversal()
@@ -183,34 +183,34 @@ leader_tree = tkinter.ttk.Treeview(main_board, columns=('Rank', 'ID', 'Name', 'G
                                    show='headings', height=5, selectmode=tkinter.NONE)
 leader_tree.grid(row=5, column=1, columnspan=2, padx=4, pady=4, ipadx=4, ipady=4)
 leader_tree.heading('Rank', text='Rank')
-leader_tree.column('Rank', width=96, anchor=tkinter.CENTER)
+leader_tree.column('Rank', width=64, anchor=tkinter.CENTER)
 leader_tree.heading('ID', text='ID')
-leader_tree.column('ID', width=96, anchor=tkinter.CENTER)
+leader_tree.column('ID', width=64, anchor=tkinter.CENTER)
 leader_tree.heading('Name', text='Name')
 leader_tree.column('Name', width=192, anchor=tkinter.CENTER)
 leader_tree.heading('Games Played', text='Games Played')
 leader_tree.column('Games Played', width=96, anchor=tkinter.CENTER)
 leader_tree.heading('Score', text='Score')
-leader_tree.column('Score', width=96, anchor=tkinter.CENTER)
+leader_tree.column('Score', width=64, anchor=tkinter.CENTER)
 leader_tree.heading('Average', text='Average')
-leader_tree.column('Average', width=96, anchor=tkinter.CENTER)
+leader_tree.column('Average', width=64, anchor=tkinter.CENTER)
 
 sort_by = tkinter.ttk.Labelframe(main_board, text='Sorting Options')
 family = tkinter.StringVar(value='"BOTH"')
 gender = tkinter.StringVar(value='"GENDER"')
 category = tkinter.StringVar(value='"CATEGORY"')
 
-tkinter.Radiobutton(sort_by, text='Both', variable=family, value='"BOTH"', indicatoron=False, width=8).grid(row=1, column=1, padx=8, pady=4)
-tkinter.Radiobutton(sort_by, text='Somanis', variable=family, value='\'somani\'', indicatoron=False, width=8).grid(row=1, column=2, padx=8, pady=4)
-tkinter.Radiobutton(sort_by, text='Bahetis', variable=family, value='\'baheti\'', indicatoron=False, width=8).grid(row=1, column=3, padx=8, pady=4)
+tkinter.Radiobutton(sort_by, text='Both', variable=family, value='"BOTH"', indicatoron=False, width=8).grid(row=1, column=1, padx=4, pady=2)
+tkinter.Radiobutton(sort_by, text='Somanis', variable=family, value='\'somani\'', indicatoron=False, width=8).grid(row=1, column=2, padx=4, pady=2)
+tkinter.Radiobutton(sort_by, text='Bahetis', variable=family, value='\'baheti\'', indicatoron=False, width=8).grid(row=1, column=3, padx=4, pady=2)
 
-tkinter.Radiobutton(sort_by, text='Both', variable=gender, value='"GENDER"', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=1, padx=8, pady=4)
-tkinter.Radiobutton(sort_by, text='Male', variable=gender, value='\'M\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=2, padx=8, pady=4)
-tkinter.Radiobutton(sort_by, text='Female', variable=gender, value='\'F\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=3, padx=8, pady=4)
+tkinter.Radiobutton(sort_by, text='Both', variable=gender, value='"GENDER"', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=1, padx=4, pady=2)
+tkinter.Radiobutton(sort_by, text='Male', variable=gender, value='\'M\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=2, padx=4, pady=2)
+tkinter.Radiobutton(sort_by, text='Female', variable=gender, value='\'F\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=3, padx=4, pady=2)
 
-tkinter.Radiobutton(sort_by, text='Both', variable=category, value='"CATEGORY"', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=1, padx=8, pady=4)
-tkinter.Radiobutton(sort_by, text='Category 1', variable=category, value='\'1\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=2, padx=8, pady=4)
-tkinter.Radiobutton(sort_by, text='Category 2', variable=category, value='\'2\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=3, padx=8, pady=4)
+tkinter.Radiobutton(sort_by, text='Both', variable=category, value='"CATEGORY"', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=1, padx=4, pady=2)
+tkinter.Radiobutton(sort_by, text='Category 1', variable=category, value='\'1\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=2, padx=4, pady=2)
+tkinter.Radiobutton(sort_by, text='Category 2', variable=category, value='\'2\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=3, padx=4, pady=2)
 
 sort_by.grid(row=5, column=3, columnspan=1, padx=4, pady=4, ipadx=4, ipady=4, sticky=tkinter.NS)
 
