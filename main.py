@@ -1,6 +1,5 @@
 import tkinter
 import tkinter.ttk
-import tkinter.tix
 import tkinter.filedialog
 import sqlite3
 import objects
@@ -118,6 +117,9 @@ root.config(menu=menu)
 #######################################
 # NOTEBOOK
 #######################################
+style = tkinter.ttk.Style()
+style.theme_use('clam')
+
 notebook = tkinter.ttk.Notebook(root, height=root.winfo_screenheight(), width=root.winfo_screenwidth())
 notebook.enable_traversal()
 notebook.grid(row=1, column=1, padx=4, pady=4)
@@ -128,13 +130,13 @@ notebook.grid(row=1, column=1, padx=4, pady=4)
 main_board = tkinter.Frame()
 
 tkinter.ttk.Label(main_board, text='RESULTS',
-              font=('Arial', 36)).grid(row=1, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+                  font=('Arial', 36)).grid(row=1, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
 
 tkinter.ttk.Label(main_board, text='Individual Games Topper',
-              font=('Arial', 24)).grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+                  font=('Arial', 24)).grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
-game_tree = tkinter.ttk.Treeview(main_board, columns=('Game', 'Coordinator', 'Players', 'Maximum Score'),
+game_tree = tkinter.ttk.Treeview(main_board, columns=('Game', 'Coordinator', 'Players', 'Maximum Score', 'Best Player'),
                                  show='headings', height=5, selectmode=tkinter.NONE)
 game_tree.grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 game_tree.heading('Game', text='Game')
@@ -145,17 +147,32 @@ game_tree.heading('Players', text='Players')
 game_tree.column('Players', width=96, anchor=tkinter.CENTER)
 game_tree.heading('Maximum Score', text='Maximum Score')
 game_tree.column('Maximum Score', width=96, anchor=tkinter.CENTER)
+game_tree.heading('Best Player', text='Best Player')
+game_tree.column('Best Player', width=96, anchor=tkinter.CENTER)
 
 
 def update_game_tree(connection):
     game_tree.delete(*game_tree.get_children())
+
+    columns = []
+
+    for (game_name,) in connection.execute('SELECT NAME FROM GAMES;'):
+        columns.append('COALESCE(%s, 0)' % (process_name(game_name).upper()))
+
+    columns = ' + '.join(columns)
+
     for (game_name, game_coordinator) in connection.execute('SELECT * FROM GAMES;'):
         played_by = connection.execute('SELECT COUNT(*) FROM PLAYERS WHERE ' +
                                        process_name(game_name) + ' IS NOT NULL').fetchall()
-        max_score = connection.execute('SELECT MAX(' + process_name(game_name) + ') FROM PLAYERS;').fetchall()
-        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, played_by[0], max_score[0]))
+
+        max_player, max_score = connection.execute('SELECT NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 1;' %
+                                                   (process_name(game_name), process_name(game_name), columns)).fetchall()[0]
+
+        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, played_by[0], max_score, max_player))
+
     if len(game_tree.get_children()) > game_tree.cget('height'):
         game_tree.config(height=len(game_tree.get_children()))
+
     game_tree.after(5000, lambda: update_game_tree(connection))
 
 
@@ -164,7 +181,7 @@ tkinter.ttk.Label(main_board, text='Top Players based on All Games',
 
 leader_tree = tkinter.ttk.Treeview(main_board, columns=('Rank', 'ID', 'Name', 'Games Played', 'Score', 'Average'),
                                    show='headings', height=5, selectmode=tkinter.NONE)
-leader_tree.grid(row=5, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+leader_tree.grid(row=5, column=1, columnspan=2, padx=4, pady=4, ipadx=4, ipady=4)
 leader_tree.heading('Rank', text='Rank')
 leader_tree.column('Rank', width=96, anchor=tkinter.CENTER)
 leader_tree.heading('ID', text='ID')
@@ -183,22 +200,22 @@ family = tkinter.StringVar(value='"BOTH"')
 gender = tkinter.StringVar(value='"GENDER"')
 category = tkinter.StringVar(value='"CATEGORY"')
 
-tkinter.Radiobutton(sort_by, text='Both', variable=family, value='"BOTH"').grid(row=1, column=1)
-tkinter.Radiobutton(sort_by, text='Somanis', variable=family, value='\'somani\'').grid(row=1, column=2)
-tkinter.Radiobutton(sort_by, text='Bahetis', variable=family, value='\'baheti\'').grid(row=1, column=3)
+tkinter.Radiobutton(sort_by, text='Both', variable=family, value='"BOTH"', indicatoron=False, width=8).grid(row=1, column=1, padx=8, pady=4)
+tkinter.Radiobutton(sort_by, text='Somanis', variable=family, value='\'somani\'', indicatoron=False, width=8).grid(row=1, column=2, padx=8, pady=4)
+tkinter.Radiobutton(sort_by, text='Bahetis', variable=family, value='\'baheti\'', indicatoron=False, width=8).grid(row=1, column=3, padx=8, pady=4)
 
-tkinter.Radiobutton(sort_by, text='Both', variable=gender, value='"GENDER"', command=lambda: update_leader_tree(connection)).grid(row=2, column=1)
-tkinter.Radiobutton(sort_by, text='Male', variable=gender, value='\'M\'', command=lambda: update_leader_tree(connection)).grid(row=2, column=2)
-tkinter.Radiobutton(sort_by, text='Female', variable=gender, value='\'F\'', command=lambda: update_leader_tree(connection)).grid(row=2, column=3)
+tkinter.Radiobutton(sort_by, text='Both', variable=gender, value='"GENDER"', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=1, padx=8, pady=4)
+tkinter.Radiobutton(sort_by, text='Male', variable=gender, value='\'M\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=2, padx=8, pady=4)
+tkinter.Radiobutton(sort_by, text='Female', variable=gender, value='\'F\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=3, padx=8, pady=4)
 
-tkinter.Radiobutton(sort_by, text='Both', variable=category, value='"CATEGORY"', command=lambda: update_leader_tree(connection)).grid(row=3, column=1)
-tkinter.Radiobutton(sort_by, text='Category 1', variable=category, value='\'1\'', command=lambda: update_leader_tree(connection)).grid(row=3, column=2)
-tkinter.Radiobutton(sort_by, text='Category 2', variable=category, value='\'2\'', command=lambda: update_leader_tree(connection)).grid(row=3, column=3)
+tkinter.Radiobutton(sort_by, text='Both', variable=category, value='"CATEGORY"', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=1, padx=8, pady=4)
+tkinter.Radiobutton(sort_by, text='Category 1', variable=category, value='\'1\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=2, padx=8, pady=4)
+tkinter.Radiobutton(sort_by, text='Category 2', variable=category, value='\'2\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=3, padx=8, pady=4)
 
-sort_by.grid(row=6, column=1, columnspan=3, sticky=tkinter.EW)
+sort_by.grid(row=5, column=3, columnspan=1, padx=4, pady=4, ipadx=4, ipady=4, sticky=tkinter.NS)
 
 
-def update_leader_tree(connection):
+def update_leader_tree(connection, self_called=True):
     leader_tree.delete(*leader_tree.get_children())
 
     columns = []
@@ -223,22 +240,11 @@ def update_leader_tree(connection):
 
     if len(leader_tree.get_children()) > leader_tree.cget('height'):
         leader_tree.config(height=len(leader_tree.get_children()))
-    leader_tree.after(5000, lambda: update_leader_tree(connection))
 
-# tkinter.Label(self.frame, text='ID:', font=('Courier New', 16, 'bold')).grid(row=4, column=1)
-# self.id = tkinter.Entry(self.frame, width=8, font=('Courier New', 16, 'bold'))
-# self.id.grid(row=5, column=1, padx=4)
-#
-# tkinter.Label(self.frame, text='Points:', font=('Courier New', 16, 'bold')).grid(row=4, column=2)
-# self.score = tkinter.Entry(self.frame, width=8, font=('Courier New', 16, 'bold'))
-# self.score.grid(row=5, column=2, padx=4)
-#
-# self.submit = tkinter.ttk.Button(self.frame, text='Submit', command=lambda: self.add_score(connection))
-# self.submit.bind('<Enter>', lambda event: self.add_score(connection))
-# self.submit.bind('<Return>', lambda event: self.add_score(connection))
-# self.submit.grid(row=5, column=3, padx=4)
+    if self_called:
+        leader_tree.after(5000, lambda: update_leader_tree(connection))
 
-notebook.add(main_board, text='RESULTS', underline=0, sticky=tkinter.NS)
+notebook.add(main_board, text='Results', underline=0, sticky=tkinter.NS)
 
 #######################################
 # PRE-LAUNCH

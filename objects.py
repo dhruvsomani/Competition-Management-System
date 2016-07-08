@@ -34,7 +34,7 @@ class Game(object):
 
         self.tree = tkinter.ttk.Treeview(self.frame, columns=('ID', 'Name', 'Score'), show='headings',
                                          height=5, selectmode=tkinter.NONE)
-        self.tree.grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+        self.tree.grid(row=2, column=1, columnspan=3, padx=4, pady=8, ipadx=4, ipady=4)
         self.tree.heading('ID', text="ID")
         self.tree.column("ID", width=96, anchor=tkinter.CENTER)
         self.tree.heading('Name', text="Name")
@@ -61,6 +61,7 @@ class Game(object):
         # MENU
         #######################################
         self.menu = tkinter.Menu(tearoff=False)
+        self.menu.add_command(label='Rename', command=self.rename)
         self.menu.add_command(label='Destroy', command=lambda: self.destroy(connection))
 
         self.update_leaderboard(connection)
@@ -70,15 +71,6 @@ class Game(object):
 
     def show_menu(self, event):
         self.menu.post(event.x_root, event.y_root)
-
-    def destroy(self, connection):
-        to_delete = tkinter.messagebox.askyesno('Delete Game', 'Are you sure you want to delete this game? '
-                                                               'This action is irreversible.')
-
-        if to_delete:
-            connection.execute('DELETE FROM GAMES WHERE NAME = "' + self.name + '";')
-            connection.commit()
-            self.frame.destroy()
 
     def add_score(self, connection):
         player_id = self.id.get()
@@ -91,8 +83,8 @@ class Game(object):
             return
 
         try:
-            connection.execute('UPDATE PLAYERS SET ' + process_name(player_game) + ' = ' +
-                               player_score + ' WHERE ID = ' + player_id + ';')
+            connection.execute('UPDATE PLAYERS SET %s = %s WHERE ID = %s;' %
+                               (process_name(self.name), player_score, player_id))
             connection.commit()
         except sqlite3.OperationalError as error:
             self.warner.config(text='SQLite Error: '+str(error))
@@ -104,9 +96,27 @@ class Game(object):
 
         self.id.focus_set()
 
+    def rename(self):
+        pass
+
+    def destroy(self, connection):
+        to_delete = tkinter.messagebox.askyesno('Delete Game', 'Are you sure you want to delete this game? '
+                                                               'This action is irreversible.')
+
+        if to_delete:
+            connection.execute('DELETE FROM GAMES WHERE NAME = "' + self.name + '";')
+            connection.commit()
+            self.frame.destroy()
+
     def update_leaderboard(self, connection):
         self.tree.delete(*self.tree.get_children())
-        for (id, player, score) in connection.execute('SELECT ID, NAME, ' + process_name(self.name) +
-                                                        ' FROM PLAYERS ORDER BY ' + process_name(self.name) +
-                                                        ' DESC LIMIT 3'):
+
+        columns = []
+        for item in connection.execute('SELECT NAME FROM GAMES;').fetchall():
+            columns.append('COALESCE(' + process_name(item.__getitem__(0)).upper() + ', 0)')
+
+        columns = ' + '.join(columns)
+
+        for (id, player, score) in connection.execute('SELECT ID, NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 3' %
+                                                      (process_name(self.name), process_name(self.name), columns)):
             self.tree.insert('', tkinter.END, values=(id, player, score))
