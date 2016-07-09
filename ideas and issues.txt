@@ -19,3 +19,7 @@ Make the sorting algorithm a bit (a lot) better while adding Olympics style rank
 TO DO:
 3) GAME ALPHA APPEARING IN GAME_TREE WHILE NO TAB
 5) PLAYERWISE RESULT, ADD A NEW TAB. COLUMNS GAME_NAME, GAME_SCORE, TOTAL
+
+***************************************
+Solve the errors which occur when the starting game list is empty
+**********************************

@@ -2,7 +2,13 @@ import tkinter
 import tkinter.ttk
 import tkinter.filedialog
 import sqlite3
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
+from matplotlib.ticker import MultipleLocator
+
 import objects
+
+# //TODO Solve the errors which occur when the starting game list is empty
 
 #######################################
 # STARTUP
@@ -51,7 +57,6 @@ connection.execute('''CREATE TABLE IF NOT EXISTS GAMES (
 connection.execute('''CREATE TABLE IF NOT EXISTS PLAYERS (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                     NAME VARCHAR(31) NOT NULL,
-                    SURNAME VARCHAR(31),
                     GENDER VARCHAR(1),
                     CATEGORY VARCHAR(1));''')
 
@@ -148,7 +153,7 @@ game_tree.column('Players', width=96, anchor=tkinter.CENTER)
 game_tree.heading('Maximum Score', text='Maximum Score')
 game_tree.column('Maximum Score', width=96, anchor=tkinter.CENTER)
 game_tree.heading('Best Player', text='Best Player')
-game_tree.column('Best Player', width=96, anchor=tkinter.CENTER)
+game_tree.column('Best Player', width=192, anchor=tkinter.CENTER)
 
 
 def update_game_tree(connection):
@@ -168,16 +173,20 @@ def update_game_tree(connection):
         max_player, max_score = connection.execute('SELECT NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 1;' %
                                                    (process_name(game_name), process_name(game_name), columns)).fetchall()[0]
 
-        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, played_by[0], max_score, max_player))
+        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, played_by[0], max_score, max_player), tags=('row',))
+
+    print(game_tree.tag_configure('row'))
+    # TODO add a correct font without doubt and ask mummy and komal
+    # game_tree.tag_configure('row', foreground='blue', background='yellow', font=('Verdana', 16, 'bold'))
 
     if len(game_tree.get_children()) > game_tree.cget('height'):
         game_tree.config(height=len(game_tree.get_children()))
 
-    game_tree.after(5000, lambda: update_game_tree(connection))
+    game_tree.after(10000, lambda: update_game_tree(connection))
 
 
 tkinter.ttk.Label(main_board, text='Top Players based on All Games',
-              font=('Arial', 24)).grid(row=4, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+                  font=('Arial', 24)).grid(row=4, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
 leader_tree = tkinter.ttk.Treeview(main_board, columns=('Rank', 'ID', 'Name', 'Games Played', 'Score', 'Average'),
                                    show='headings', height=5, selectmode=tkinter.NONE)
@@ -233,18 +242,63 @@ def update_leader_tree(connection, self_called=True):
     gen = gender.get()
     cat = category.get()
 
-    for player in connection.execute('SELECT ID, NAME, %s, %s FROM PLAYERS WHERE UPPER(GENDER) = UPPER(%s) AND CATEGORY = %s'
-                                     ' ORDER BY %s DESC LIMIT 5;' % (games_played, columns, gen, cat, columns)):
-        leader_tree.insert('', tkinter.END, values=((rank,) + player) + ('%.2f' % round(player[-1]/player[-2], 2),))
-        rank += 1
+    if columns != '':
+        for player in connection.execute('SELECT ID, NAME, %s, %s FROM PLAYERS WHERE UPPER(GENDER) = UPPER(%s) AND CATEGORY = %s'
+                                         ' ORDER BY %s DESC LIMIT 5;' % (games_played, columns, gen, cat, columns)):
+            leader_tree.insert('', tkinter.END, values=((rank,) + player) + ('%.2f' % round(player[-1]/player[-2], 2),))
+            rank += 1
 
-    if len(leader_tree.get_children()) > leader_tree.cget('height'):
-        leader_tree.config(height=len(leader_tree.get_children()))
+        if len(leader_tree.get_children()) > leader_tree.cget('height'):
+            leader_tree.config(height=len(leader_tree.get_children()))
 
     if self_called:
-        leader_tree.after(5000, lambda: update_leader_tree(connection))
+        leader_tree.after(10000, lambda: update_leader_tree(connection))
 
 notebook.add(main_board, text='Results', underline=0, sticky=tkinter.NS)
+
+#######################################
+# GRAPH
+#######################################
+graph_board = tkinter.Frame()
+figure = Figure(figsize=(16, 7), dpi=100)
+figure.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+
+graph = figure.add_subplot(111)
+
+canvas = FigureCanvasTkAgg(figure, master=graph_board)
+canvas.show()
+canvas.get_tk_widget().grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+
+def update_graph(connection, self_called=True):
+    global graph
+    columns = []
+    for item in connection.execute('SELECT NAME FROM GAMES;').fetchall():
+        columns.append('COALESCE(' + process_name(item.__getitem__(0)).upper() + ', 0)')
+
+    num_of_cols = len(columns)
+
+    columns = ' + '.join(columns)
+
+    figure.delaxes(graph)
+    graph = figure.add_subplot(111)
+    score_data = list(connection.execute('SELECT ID, %s FROM PLAYERS;' % (columns,)))
+
+    if score_data != []:
+        ids, scores = zip(*score_data)
+        graph.bar(ids, scores, color='rbygc', align='center')
+
+    graph.set_xlim([100, 200])
+    graph.set_ylim([0, num_of_cols*10])
+    loc = MultipleLocator(5)
+    graph.xaxis.set_major_locator(loc)
+
+    canvas.show()
+    canvas.get_tk_widget().grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+
+    if self_called:
+        root.after(10000, lambda: update_graph(connection))
+
+notebook.add(graph_board, text='Graphs', underline=0, sticky=tkinter.NS)
 
 #######################################
 # PRE-LAUNCH
@@ -254,7 +308,9 @@ for (game_name, game_coordinator) in connection.execute('SELECT * FROM GAMES;'):
 
 update_game_tree(connection)
 update_leader_tree(connection)
+update_graph(connection)
 
+# //TODO Add a main matplotlib graph total and remove the smaller many graphs!!!!!!!!!!!
 
 #######################################
 # MAINLOOP

@@ -3,7 +3,6 @@ import tkinter.ttk
 import tkinter.messagebox
 import sqlite3
 
-
 def process_name(string):
     return 'game_' + string.replace(' ', '_').replace("'", '').replace('"', '')
 
@@ -85,7 +84,6 @@ class Game(object):
 
     def add_score(self, connection):
         player_id = self.id.get()
-        player_game = self.name
         player_score = self.score.get()
 
         if player_score == '' or int(player_score) < 0 or int(player_score) > 10:
