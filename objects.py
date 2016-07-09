@@ -10,6 +10,17 @@ def process_name(string):
 
 class Game(object):
     def __init__(self, name, coordinator, connection, new=True):
+        '''
+        The Game class is the object representing a singles game.
+        It is a single game which may be played by a team or an individual.
+        The scores of many games are used to show the score on the Results page.
+        :param name: name of the game to be shown to the users; 
+        :param coordinator: name of the coordinator of the game; not necessary
+        :param connection: connection to the SQLite3 Database
+        :param new: is the record new or bringing in from a previously saved game
+        :return: None
+        '''
+
         #######################################
         # FIRST SETTINGS
         #######################################
