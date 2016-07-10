@@ -134,24 +134,24 @@ notebook.grid(row=1, column=1, padx=4, pady=4)
 #######################################
 main_board = tkinter.Frame()
 
-tkinter.ttk.Label(main_board, text='RESULTS',
+tkinter.ttk.Label(main_board, text='LIVE RESULTS',
                   font=('Arial', 36)).grid(row=1, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
 
 tkinter.ttk.Label(main_board, text='Individual Games Topper',
                   font=('Arial', 24)).grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
-game_tree = tkinter.ttk.Treeview(main_board, columns=('Game', 'Coordinator', 'Players', 'Maximum Score', 'Best Player'),
+game_tree = tkinter.ttk.Treeview(main_board, columns=('Game', 'Coordinator', 'Played By', 'Maximum Points Scored', 'Best Player'),
                                  show='headings', height=5, selectmode=tkinter.NONE)
 game_tree.grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 game_tree.heading('Game', text='Game')
 game_tree.column('Game', width=192, anchor=tkinter.CENTER)
 game_tree.heading('Coordinator', text='Coordinator')
 game_tree.column('Coordinator', width=192, anchor=tkinter.CENTER)
-game_tree.heading('Players', text='Players')
-game_tree.column('Players', width=96, anchor=tkinter.CENTER)
-game_tree.heading('Maximum Score', text='Maximum Score')
-game_tree.column('Maximum Score', width=96, anchor=tkinter.CENTER)
+game_tree.heading('Played By', text='Played By')
+game_tree.column('Played By', width=96, anchor=tkinter.CENTER)
+game_tree.heading('Maximum Points Scored', text='Maximum Points Scored')
+game_tree.column('Maximum Points Scored', width=160, anchor=tkinter.CENTER)
 game_tree.heading('Best Player', text='Best Player')
 game_tree.column('Best Player', width=192, anchor=tkinter.CENTER)
 
@@ -173,10 +173,11 @@ def update_game_tree(connection):
         max_player, max_score = connection.execute('SELECT NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 1;' %
                                                    (process_name(game_name), process_name(game_name), columns)).fetchall()[0]
 
-        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, played_by[0], max_score, max_player), tags=('row',))
+        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, str(played_by[0][0]) + ' players', max_score, max_player), tags=('row',))
 
     print(game_tree.tag_configure('row'))
     # TODO add a correct font without doubt and ask mummy and komal
+    # TODO add horizontal lines alternate
     # game_tree.tag_configure('row', foreground='blue', background='yellow', font=('Verdana', 16, 'bold'))
 
     if len(game_tree.get_children()) > game_tree.cget('height'):
@@ -204,6 +205,7 @@ leader_tree.column('Score', width=64, anchor=tkinter.CENTER)
 leader_tree.heading('Average', text='Average')
 leader_tree.column('Average', width=64, anchor=tkinter.CENTER)
 
+# TODO add to a new line
 sort_by = tkinter.ttk.Labelframe(main_board, text='Sorting Options')
 family = tkinter.StringVar(value='"BOTH"')
 gender = tkinter.StringVar(value='"GENDER"')
@@ -218,8 +220,8 @@ tkinter.Radiobutton(sort_by, text='Male', variable=gender, value='\'M\'', indica
 tkinter.Radiobutton(sort_by, text='Female', variable=gender, value='\'F\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=3, padx=4, pady=2)
 
 tkinter.Radiobutton(sort_by, text='Both', variable=category, value='"CATEGORY"', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=1, padx=4, pady=2)
-tkinter.Radiobutton(sort_by, text='Category 1', variable=category, value='\'1\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=2, padx=4, pady=2)
-tkinter.Radiobutton(sort_by, text='Category 2', variable=category, value='\'2\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=3, padx=4, pady=2)
+tkinter.Radiobutton(sort_by, text='Adults', variable=category, value='\'A\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=2, padx=4, pady=2)
+tkinter.Radiobutton(sort_by, text='Kids', variable=category, value='\'K\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=3, padx=4, pady=2)
 
 sort_by.grid(row=5, column=3, columnspan=1, padx=4, pady=4, ipadx=4, ipady=4, sticky=tkinter.NS)
 
@@ -242,14 +244,16 @@ def update_leader_tree(connection, self_called=True):
     gen = gender.get()
     cat = category.get()
 
-    if columns != '':
-        for player in connection.execute('SELECT ID, NAME, %s, %s FROM PLAYERS WHERE UPPER(GENDER) = UPPER(%s) AND CATEGORY = %s'
-                                         ' ORDER BY %s DESC LIMIT 5;' % (games_played, columns, gen, cat, columns)):
+    for player in connection.execute('SELECT ID, NAME, %s, %s FROM PLAYERS WHERE UPPER(GENDER) = UPPER(%s) AND CATEGORY = %s'
+                                     ' ORDER BY %s DESC LIMIT 5;' % (games_played, columns, gen, cat, columns)):
+        try:
             leader_tree.insert('', tkinter.END, values=((rank,) + player) + ('%.2f' % round(player[-1]/player[-2], 2),))
             rank += 1
+        except:
+            pass
 
-        if len(leader_tree.get_children()) > leader_tree.cget('height'):
-            leader_tree.config(height=len(leader_tree.get_children()))
+    if len(leader_tree.get_children()) > leader_tree.cget('height'):
+        leader_tree.config(height=len(leader_tree.get_children()))
 
     if self_called:
         leader_tree.after(10000, lambda: update_leader_tree(connection))
@@ -260,8 +264,8 @@ notebook.add(main_board, text='Results', underline=0, sticky=tkinter.NS)
 # GRAPH
 #######################################
 graph_board = tkinter.Frame()
-figure = Figure(figsize=(16, 7), dpi=100)
-figure.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+figure = Figure(figsize=(16, 7.5), dpi=100)
+figure.subplots_adjust(left=0.05, right=0.90, top=0.95, bottom=0.1)
 
 graph = figure.add_subplot(111)
 
@@ -280,7 +284,7 @@ def update_graph(connection, self_called=True):
     columns = ' + '.join(columns)
 
     figure.delaxes(graph)
-    graph = figure.add_subplot(111)
+    graph = figure.add_subplot(111, title='Results by ID', xlabel='Player by ID', ylabel='Player Score')
     score_data = list(connection.execute('SELECT ID, %s FROM PLAYERS;' % (columns,)))
 
     if score_data != []:
@@ -289,8 +293,10 @@ def update_graph(connection, self_called=True):
 
     graph.set_xlim([100, 200])
     graph.set_ylim([0, num_of_cols*10])
-    loc = MultipleLocator(5)
-    graph.xaxis.set_major_locator(loc)
+    x_loc = MultipleLocator(5)
+    y_loc = MultipleLocator(2)
+    graph.xaxis.set_major_locator(x_loc)
+    graph.yaxis.set_major_locator(y_loc)
 
     canvas.show()
     canvas.get_tk_widget().grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
