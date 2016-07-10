@@ -50,16 +50,33 @@ import objects
 #######################################
 connection = sqlite3.connect('D:/fun_marathon.sqlite3')
 
-connection.execute('''CREATE TABLE IF NOT EXISTS GAMES (
+connection.execute('''CREATE TABLE IF NOT EXISTS GAMES(
                     NAME VARCHAR(63),
                     COORDINATOR VARCHAR(31));''')
 
-connection.execute('''CREATE TABLE IF NOT EXISTS PLAYERS (
+connection.execute('''CREATE TABLE IF NOT EXISTS PLAYERS(
                     ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                     NAME VARCHAR(31) NOT NULL,
                     GENDER VARCHAR(1),
                     CATEGORY VARCHAR(1));''')
 
+connection.execute('''CREATE TABLE IF NOT EXISTS SETTINGS(
+                    THEME TEXT DEFAULT 'vista',
+                    GRAPH BOOL DEFAULT TRUE,
+                    GRAPH_COLORS TEXT DEFAULT 'rbygc',
+                    MAIN_BOARD_LABEL TEXT DEFAULT 'LIVE SCORES',
+                    MAIN_BOARD_INDV_SCORES_LABEL TEXT DEFAULT 'Individual Games Topper',
+                    MAIN_BOARD_TOTAL_SCORES_LABEL TEXT DEFAULT 'Top Players based on All Games',
+                    STRIPE_COLORS TEXT DEFAULT '#a0e2ff'
+                    );''')
+
+if list(connection.execute('SELECT * FROM SETTINGS;')) == []:
+    connection.execute('INSERT INTO SETTINGS DEFAULT VALUES;')
+
+field_values = connection.execute('SELECT * FROM SETTINGS;')
+field_titles = [field[0].lower() for field in field_values.description]
+field_values = list(field_values)[0]
+settings  = dict(zip(field_titles, field_values))
 
 def create_game(name, coordinator, connection, new=True, game_data=None):
         game = objects.Game(name, coordinator, connection, new)
@@ -122,8 +139,9 @@ root.config(menu=menu)
 #######################################
 # NOTEBOOK
 #######################################
-# style = tkinter.ttk.Style()
-# style.theme_use('clam')
+style = tkinter.ttk.Style()
+style.theme_use(settings['theme'])
+style.configure("Treeview.Heading", font=('Arial', 16))
 
 notebook = tkinter.ttk.Notebook(root, height=root.winfo_screenheight(), width=root.winfo_screenwidth())
 notebook.enable_traversal()
@@ -134,11 +152,11 @@ notebook.grid(row=1, column=1, padx=4, pady=4)
 #######################################
 main_board = tkinter.Frame()
 
-tkinter.ttk.Label(main_board, text='LIVE RESULTS',
+tkinter.ttk.Label(main_board, text=settings['main_board_label'],
                   font=('Arial', 36)).grid(row=1, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
 
-tkinter.ttk.Label(main_board, text='Individual Games Topper',
+tkinter.ttk.Label(main_board, text=settings['main_board_indv_scores_label'],
                   font=('Arial', 24)).grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
 game_tree = tkinter.ttk.Treeview(main_board, columns=('Game', 'Coordinator', 'Played By', 'Maximum Points Scored', 'Best Player'),
@@ -149,7 +167,7 @@ game_tree.column('Game', width=192, anchor=tkinter.CENTER)
 game_tree.heading('Coordinator', text='Coordinator')
 game_tree.column('Coordinator', width=192, anchor=tkinter.CENTER)
 game_tree.heading('Played By', text='Played By')
-game_tree.column('Played By', width=96, anchor=tkinter.CENTER)
+game_tree.column('Played By', width=160, anchor=tkinter.CENTER)
 game_tree.heading('Maximum Points Scored', text='Maximum Points Scored')
 game_tree.column('Maximum Points Scored', width=160, anchor=tkinter.CENTER)
 game_tree.heading('Best Player', text='Best Player')
@@ -166,6 +184,8 @@ def update_game_tree(connection):
 
     columns = ' + '.join(columns)
 
+    row = 0
+
     for (game_name, game_coordinator) in connection.execute('SELECT * FROM GAMES;'):
         played_by = connection.execute('SELECT COUNT(*) FROM PLAYERS WHERE ' +
                                        process_name(game_name) + ' IS NOT NULL').fetchall()
@@ -173,12 +193,12 @@ def update_game_tree(connection):
         max_player, max_score = connection.execute('SELECT NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 1;' %
                                                    (process_name(game_name), process_name(game_name), columns)).fetchall()[0]
 
-        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, str(played_by[0][0]) + ' players', max_score, max_player), tags=('row',))
+        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, str(played_by[0][0]) + ' players', max_score, max_player), tags=(str(row%2),))
+        row += 1
 
-    print(game_tree.tag_configure('row'))
-    # TODO add a correct font without doubt and ask mummy and komal
-    # TODO add horizontal lines alternate
-    # game_tree.tag_configure('row', foreground='blue', background='yellow', font=('Verdana', 16, 'bold'))
+    game_tree.tag_configure('0', font=('Arial, 12'))
+    game_tree.tag_configure('1', font=('Arial, 12'))
+    game_tree.tag_configure('0', background=settings['stripe_colors'])
 
     if len(game_tree.get_children()) > game_tree.cget('height'):
         game_tree.config(height=len(game_tree.get_children()))
@@ -186,26 +206,26 @@ def update_game_tree(connection):
     game_tree.after(10000, lambda: update_game_tree(connection))
 
 
-tkinter.ttk.Label(main_board, text='Top Players based on All Games',
+tkinter.ttk.Label(main_board, text=settings['main_board_total_scores_label'],
                   font=('Arial', 24)).grid(row=4, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
 leader_tree = tkinter.ttk.Treeview(main_board, columns=('Rank', 'ID', 'Name', 'Games Played', 'Score', 'Average'),
                                    show='headings', height=5, selectmode=tkinter.NONE)
-leader_tree.grid(row=5, column=1, columnspan=2, padx=4, pady=4, ipadx=4, ipady=4)
+leader_tree.grid(row=5, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 leader_tree.heading('Rank', text='Rank')
-leader_tree.column('Rank', width=64, anchor=tkinter.CENTER)
+leader_tree.column('Rank', width=128, anchor=tkinter.CENTER)
 leader_tree.heading('ID', text='ID')
-leader_tree.column('ID', width=64, anchor=tkinter.CENTER)
+leader_tree.column('ID', width=128, anchor=tkinter.CENTER)
 leader_tree.heading('Name', text='Name')
 leader_tree.column('Name', width=192, anchor=tkinter.CENTER)
 leader_tree.heading('Games Played', text='Games Played')
-leader_tree.column('Games Played', width=96, anchor=tkinter.CENTER)
+leader_tree.column('Games Played', width=160, anchor=tkinter.CENTER)
 leader_tree.heading('Score', text='Score')
-leader_tree.column('Score', width=64, anchor=tkinter.CENTER)
+leader_tree.column('Score', width=128, anchor=tkinter.CENTER)
 leader_tree.heading('Average', text='Average')
-leader_tree.column('Average', width=64, anchor=tkinter.CENTER)
+leader_tree.column('Average', width=128, anchor=tkinter.CENTER)
 
-# TODO add to a new line
+
 sort_by = tkinter.ttk.Labelframe(main_board, text='Sorting Options')
 family = tkinter.StringVar(value='"BOTH"')
 gender = tkinter.StringVar(value='"GENDER"')
@@ -223,7 +243,7 @@ tkinter.Radiobutton(sort_by, text='Both', variable=category, value='"CATEGORY"',
 tkinter.Radiobutton(sort_by, text='Adults', variable=category, value='\'A\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=2, padx=4, pady=2)
 tkinter.Radiobutton(sort_by, text='Kids', variable=category, value='\'K\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=3, column=3, padx=4, pady=2)
 
-sort_by.grid(row=5, column=3, columnspan=1, padx=4, pady=4, ipadx=4, ipady=4, sticky=tkinter.NS)
+sort_by.grid(row=6, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4, sticky=tkinter.NS)
 
 
 def update_leader_tree(connection, self_called=True):
@@ -247,10 +267,14 @@ def update_leader_tree(connection, self_called=True):
     for player in connection.execute('SELECT ID, NAME, %s, %s FROM PLAYERS WHERE UPPER(GENDER) = UPPER(%s) AND CATEGORY = %s'
                                      ' ORDER BY %s DESC LIMIT 5;' % (games_played, columns, gen, cat, columns)):
         try:
-            leader_tree.insert('', tkinter.END, values=((rank,) + player) + ('%.2f' % round(player[-1]/player[-2], 2),))
+            leader_tree.insert('', tkinter.END, values=((rank,) + player) + ('%.2f' % round(player[-1]/player[-2], 2),), tags=(str(rank%2),))
             rank += 1
         except:
             pass
+
+    leader_tree.tag_configure('0', font=('Arial, 12'))
+    leader_tree.tag_configure('1', font=('Arial, 12'))
+    leader_tree.tag_configure('1', background=settings['stripe_colors'])
 
     if len(leader_tree.get_children()) > leader_tree.cget('height'):
         leader_tree.config(height=len(leader_tree.get_children()))
@@ -289,14 +313,16 @@ def update_graph(connection, self_called=True):
 
     if score_data != []:
         ids, scores = zip(*score_data)
-        graph.bar(ids, scores, color='rbygc', align='center')
+        graph.bar(ids, scores, color=settings['graph_colors'], align='center')
 
-    graph.set_xlim([100, 200])
-    graph.set_ylim([0, num_of_cols*10])
-    x_loc = MultipleLocator(5)
-    y_loc = MultipleLocator(2)
-    graph.xaxis.set_major_locator(x_loc)
-    graph.yaxis.set_major_locator(y_loc)
+        graph.set_xlim([100, 150])
+        graph.set_ylim([0, num_of_cols*10])
+        x_loc = MultipleLocator(2)
+        y_loc = MultipleLocator(2)
+        graph.xaxis.set_major_locator(x_loc)
+        graph.yaxis.set_major_locator(y_loc)
+
+        graph.axhline(sum(scores)/len(scores), color='black', linestyle='dashed', linewidth=2)
 
     canvas.show()
     canvas.get_tk_widget().grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
@@ -315,8 +341,6 @@ for (game_name, game_coordinator) in connection.execute('SELECT * FROM GAMES;'):
 update_game_tree(connection)
 update_leader_tree(connection)
 update_graph(connection)
-
-# //TODO Add a main matplotlib graph total and remove the smaller many graphs!!!!!!!!!!!
 
 #######################################
 # MAINLOOP
