@@ -62,12 +62,13 @@ connection.execute('''CREATE TABLE IF NOT EXISTS PLAYERS(
 
 connection.execute('''CREATE TABLE IF NOT EXISTS SETTINGS(
                     THEME TEXT DEFAULT 'vista',
-                    GRAPH BOOL DEFAULT TRUE,
+                    GRAPH INT DEFAULT 1,
                     GRAPH_COLORS TEXT DEFAULT 'rbygc',
                     MAIN_BOARD_LABEL TEXT DEFAULT 'LIVE SCORES',
-                    MAIN_BOARD_INDV_SCORES_LABEL TEXT DEFAULT 'Individual Games Topper',
+                    MAIN_BOARD_GAME_LIST_LABEL TEXT DEFAULT 'Individual Games Topper',
                     MAIN_BOARD_TOTAL_SCORES_LABEL TEXT DEFAULT 'Top Players based on All Games',
-                    STRIPE_COLORS TEXT DEFAULT '#a0e2ff'
+                    STRIPE_COLOR1 TEXT DEFAULT '#a0e2ff',
+                    STRIPE_COLOR2 TEXT DEFAULT '#ffffff'
                     );''')
 
 if list(connection.execute('SELECT * FROM SETTINGS;')) == []:
@@ -76,7 +77,8 @@ if list(connection.execute('SELECT * FROM SETTINGS;')) == []:
 field_values = connection.execute('SELECT * FROM SETTINGS;')
 field_titles = [field[0].lower() for field in field_values.description]
 field_values = list(field_values)[0]
-settings  = dict(zip(field_titles, field_values))
+settings = dict(zip(field_titles, field_values))
+
 
 def create_game(name, coordinator, connection, new=True, game_data=None):
         game = objects.Game(name, coordinator, connection, new)
@@ -111,6 +113,9 @@ def new_game(*ignore):
 
     name.focus_set()
 
+def change_settings(*ignore):
+    settings_obj = objects.Settings(settings, root, connection)
+
 
 def process_name(string):
     return 'game_' + string.replace(' ', '_').replace("'", '').replace('"', '')
@@ -122,8 +127,11 @@ root = tkinter.Tk()
 root.title('Fun Marathon')
 root.iconbitmap('dsicon.ico')
 root.state('zoomed')
+
 root.bind('<Control-n>', new_game)
 root.bind('<Control-N>', new_game)
+root.bind('<Control-s>', change_settings)
+root.bind('<Control-S>', change_settings)
 
 menu = tkinter.Menu(tearoff=False)
 
@@ -132,7 +140,11 @@ file_menu.add_command(label='New Game', command=new_game)
 file_menu.add_separator()
 file_menu.add_command(label='Exit', command=root.destroy)
 
+settings_menu = tkinter.Menu(tearoff=False)
+settings_menu.add_command(label='Settings', command=change_settings)
+
 menu.add_cascade(label='File', menu=file_menu)
+menu.add_cascade(label='Settings', menu=settings_menu)
 
 root.config(menu=menu)
 
@@ -156,10 +168,11 @@ tkinter.ttk.Label(main_board, text=settings['main_board_label'],
                   font=('Arial', 36)).grid(row=1, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
 
-tkinter.ttk.Label(main_board, text=settings['main_board_indv_scores_label'],
+tkinter.ttk.Label(main_board, text=settings['main_board_game_list_label'],
                   font=('Arial', 24)).grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
-game_tree = tkinter.ttk.Treeview(main_board, columns=('Game', 'Coordinator', 'Played By', 'Maximum Points Scored', 'Best Player'),
+game_tree = tkinter.ttk.Treeview(main_board, columns=('Game', 'Coordinator', 'Played By',
+                                                      'Maximum Points Scored', 'Best Player'),
                                  show='headings', height=5, selectmode=tkinter.NONE)
 game_tree.grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 game_tree.heading('Game', text='Game')
@@ -193,12 +206,14 @@ def update_game_tree(connection):
         max_player, max_score = connection.execute('SELECT NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 1;' %
                                                    (process_name(game_name), process_name(game_name), columns)).fetchall()[0]
 
-        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, str(played_by[0][0]) + ' players', max_score, max_player), tags=(str(row%2),))
+        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, str(played_by[0][0]) + ' players',
+                                                  max_score, max_player), tags=(str(row%2),))
         row += 1
 
     game_tree.tag_configure('0', font=('Arial, 12'))
     game_tree.tag_configure('1', font=('Arial, 12'))
-    game_tree.tag_configure('0', background=settings['stripe_colors'])
+    game_tree.tag_configure('0', background=settings['stripe_color1'])
+    game_tree.tag_configure('1', background=settings['stripe_color2'])
 
     if len(game_tree.get_children()) > game_tree.cget('height'):
         game_tree.config(height=len(game_tree.get_children()))
@@ -226,7 +241,7 @@ leader_tree.heading('Average', text='Average')
 leader_tree.column('Average', width=128, anchor=tkinter.CENTER)
 
 
-sort_by = tkinter.ttk.Labelframe(main_board, text='Sorting Options')
+sort_by = tkinter.ttk.Labelframe(main_board, text='Filter Options')
 family = tkinter.StringVar(value='"BOTH"')
 gender = tkinter.StringVar(value='"GENDER"')
 category = tkinter.StringVar(value='"CATEGORY"')
@@ -258,7 +273,7 @@ def update_leader_tree(connection, self_called=True):
 
     columns = ' + '.join(columns)
     games_played = ' + '.join(games_played)
-    rank = 1
+    rank = 0
 
     fam = family.get()
     gen = gender.get()
@@ -267,14 +282,15 @@ def update_leader_tree(connection, self_called=True):
     for player in connection.execute('SELECT ID, NAME, %s, %s FROM PLAYERS WHERE UPPER(GENDER) = UPPER(%s) AND CATEGORY = %s'
                                      ' ORDER BY %s DESC LIMIT 5;' % (games_played, columns, gen, cat, columns)):
         try:
-            leader_tree.insert('', tkinter.END, values=((rank,) + player) + ('%.2f' % round(player[-1]/player[-2], 2),), tags=(str(rank%2),))
+            leader_tree.insert('', tkinter.END, values=((rank+1,) + player) + ('%.2f' % round(player[-1]/player[-2], 2),), tags=(str(rank % 2),))
             rank += 1
         except:
             pass
 
-    leader_tree.tag_configure('0', font=('Arial, 12'))
-    leader_tree.tag_configure('1', font=('Arial, 12'))
-    leader_tree.tag_configure('1', background=settings['stripe_colors'])
+    leader_tree.tag_configure('0', font=('Arial', 12))
+    leader_tree.tag_configure('1', font=('Arial', 12))
+    leader_tree.tag_configure('0', background=settings['stripe_color1'])
+    leader_tree.tag_configure('1', background=settings['stripe_color2'])
 
     if len(leader_tree.get_children()) > leader_tree.cget('height'):
         leader_tree.config(height=len(leader_tree.get_children()))
@@ -287,50 +303,51 @@ notebook.add(main_board, text='Results', underline=0, sticky=tkinter.NS)
 #######################################
 # GRAPH
 #######################################
-graph_board = tkinter.Frame()
-figure = Figure(figsize=(16, 7.5), dpi=100)
-figure.subplots_adjust(left=0.05, right=0.90, top=0.95, bottom=0.1)
+if settings['graph']:
+    graph_board = tkinter.Frame()
+    figure = Figure(figsize=(16, 7.5), dpi=100)
+    figure.subplots_adjust(left=0.05, right=0.90, top=0.95, bottom=0.1)
 
-graph = figure.add_subplot(111)
+    graph = figure.add_subplot(111)
 
-canvas = FigureCanvasTkAgg(figure, master=graph_board)
-canvas.show()
-canvas.get_tk_widget().grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
-
-def update_graph(connection, self_called=True):
-    global graph
-    columns = []
-    for item in connection.execute('SELECT NAME FROM GAMES;').fetchall():
-        columns.append('COALESCE(' + process_name(item.__getitem__(0)).upper() + ', 0)')
-
-    num_of_cols = len(columns)
-
-    columns = ' + '.join(columns)
-
-    figure.delaxes(graph)
-    graph = figure.add_subplot(111, title='Results by ID', xlabel='Player by ID', ylabel='Player Score')
-    score_data = list(connection.execute('SELECT ID, %s FROM PLAYERS;' % (columns,)))
-
-    if score_data != []:
-        ids, scores = zip(*score_data)
-        graph.bar(ids, scores, color=settings['graph_colors'], align='center')
-
-        graph.set_xlim([100, 150])
-        graph.set_ylim([0, num_of_cols*10])
-        x_loc = MultipleLocator(2)
-        y_loc = MultipleLocator(2)
-        graph.xaxis.set_major_locator(x_loc)
-        graph.yaxis.set_major_locator(y_loc)
-
-        graph.axhline(sum(scores)/len(scores), color='black', linestyle='dashed', linewidth=2)
-
+    canvas = FigureCanvasTkAgg(figure, master=graph_board)
     canvas.show()
     canvas.get_tk_widget().grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
-    if self_called:
-        root.after(10000, lambda: update_graph(connection))
+    def update_graph(connection, self_called=True):
+        global graph
+        columns = []
+        for item in connection.execute('SELECT NAME FROM GAMES;').fetchall():
+            columns.append('COALESCE(' + process_name(item.__getitem__(0)).upper() + ', 0)')
 
-notebook.add(graph_board, text='Graphs', underline=0, sticky=tkinter.NS)
+        num_of_cols = len(columns)
+
+        columns = ' + '.join(columns)
+
+        figure.delaxes(graph)
+        graph = figure.add_subplot(111, title='Results by ID', xlabel='Player by ID', ylabel='Player Score')
+        score_data = list(connection.execute('SELECT ID, %s FROM PLAYERS;' % (columns,)))
+
+        if score_data != []:
+            ids, scores = zip(*score_data)
+            graph.bar(ids, scores, color=settings['graph_colors'], align='center')
+
+            graph.set_xlim([100, 150])
+            graph.set_ylim([0, num_of_cols*10])
+            x_loc = MultipleLocator(2)
+            y_loc = MultipleLocator(2)
+            graph.xaxis.set_major_locator(x_loc)
+            graph.yaxis.set_major_locator(y_loc)
+
+            graph.axhline(sum(scores)/len(scores), color='black', linestyle='dashed', linewidth=2)
+
+        canvas.show()
+        canvas.get_tk_widget().grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+
+        if self_called:
+            root.after(10000, lambda: update_graph(connection))
+
+    notebook.add(graph_board, text='Graphs', underline=0, sticky=tkinter.NS)
 
 #######################################
 # PRE-LAUNCH
@@ -340,7 +357,9 @@ for (game_name, game_coordinator) in connection.execute('SELECT * FROM GAMES;'):
 
 update_game_tree(connection)
 update_leader_tree(connection)
-update_graph(connection)
+
+if settings['graph']:
+    update_graph(connection)
 
 #######################################
 # MAINLOOP
