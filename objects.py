@@ -1,6 +1,7 @@
 import tkinter
 import tkinter.ttk
 import tkinter.messagebox
+import tkinter.filedialog
 import tkinter.colorchooser
 import sqlite3
 
@@ -160,54 +161,73 @@ class Settings:
         self.subroot.title('Settings')
         self.subroot.resizable(False, False)
 
-        self.import_settings = tkinter.ttk.Button(self.subroot, text='Import Settings')
-        self.import_settings.grid(row=1, column=1, columnspan=4, padx=4, pady=4, ipadx=4, ipady=4)
+        self.import_settings = tkinter.ttk.Button(self.subroot, text='Import Settings', command=lambda: self.import_sets(connection))
+        self.import_settings.grid(row=1, column=1, columnspan=4, padx=4, pady=4)
 
         self.main_page_settings = tkinter.ttk.LabelFrame(self.subroot, text='Main Page Settings')
         self.main_page_settings.grid(row=2, column=1, columnspan=4, padx=4, pady=4, ipadx=4, ipady=4)
 
-        tkinter.Label(self.main_page_settings, text='Main Board Heading:').grid(row=1, column=1)
+        tkinter.Label(self.main_page_settings, text='Main Board Heading:').grid(row=1, column=1, padx=2, pady=2)
         self.main_board_label = tkinter.Entry(self.main_page_settings, width=32)
         self.main_board_label.insert(0, settings['main_board_label'])
-        self.main_board_label.grid(row=1, column=2)
+        self.main_board_label.grid(row=1, column=2, padx=2, pady=2)
 
-        tkinter.Label(self.main_page_settings, text='Main Board Games List Heading:').grid(row=2, column=1)
+        tkinter.Label(self.main_page_settings, text='Main Board Games List Heading:').grid(row=2, column=1, padx=2, pady=2)
         self.main_board_game_list_label = tkinter.Entry(self.main_page_settings, width=32)
         self.main_board_game_list_label.insert(0, settings['main_board_game_list_label'])
-        self.main_board_game_list_label.grid(row=2, column=2)
+        self.main_board_game_list_label.grid(row=2, column=2, padx=2, pady=2)
 
-        tkinter.Label(self.main_page_settings, text='Main Board Total Scores Heading:').grid(row=3, column=1)
+        tkinter.Label(self.main_page_settings, text='Main Board Total Scores Heading:').grid(row=3, column=1, padx=2, pady=2)
         self.main_board_total_scores_label = tkinter.Entry(self.main_page_settings, width=32)
         self.main_board_total_scores_label.insert(0, settings['main_board_total_scores_label'])
-        self.main_board_total_scores_label.grid(row=3, column=2)
+        self.main_board_total_scores_label.grid(row=3, column=2, padx=2, pady=2)
 
-        tkinter.Label(self.main_page_settings, text='Stripe Color 1:').grid(row=4, column=1)
+        tkinter.Label(self.main_page_settings, text='Stripe Color 1:').grid(row=4, column=1, padx=2, pady=2)
         self.stripe1 = tkinter.Label(self.main_page_settings, width=24, bg=settings['stripe_color1'])
         self.stripe1.bind('<Double-Button-1>', lambda event: choose_color(self.stripe1))
-        self.stripe1.grid(row=4, column=2)
+        self.stripe1.grid(row=4, column=2, padx=2, pady=2)
 
         tkinter.Label(self.main_page_settings, text='Stripe Color 2:').grid(row=5, column=1)
         self.stripe2 = tkinter.Label(self.main_page_settings, width=24, bg=settings['stripe_color2'])
         self.stripe2.bind('<Double-Button-1>', lambda event: choose_color(self.stripe2))
-        self.stripe2.grid(row=5, column=2)
+        self.stripe2.grid(row=5, column=2, padx=2, pady=2)
 
         self.graph_settings = tkinter.ttk.LabelFrame(self.subroot, text='Graph Settings')
         self.graph_settings.grid(row=3, column=1, columnspan=4, sticky=tkinter.EW, padx=4, pady=4, ipadx=4, ipady=4)
 
-        tkinter.Label(self.graph_settings, text='Show Graph:').grid(row=1, column=1)
+        tkinter.Label(self.graph_settings, text='Show Graph:').grid(row=1, column=1, padx=2, pady=2)
         self.graph_toggle = tkinter.IntVar(value=settings['graph'])
         self.show_graph = tkinter.Checkbutton(self.graph_settings, variable=self.graph_toggle)
-        self.show_graph.grid(row=1, column=2)
+        self.show_graph.grid(row=1, column=2, padx=2, pady=2)
 
-        tkinter.Label(self.graph_settings, text='Graph Colors:').grid(row=2, column=1)
+        tkinter.Label(self.graph_settings, text='Graph Colors:').grid(row=2, column=1, padx=2, pady=2)
         self.graph_colors = tkinter.Entry(self.graph_settings)
         self.graph_colors.insert(0, settings['graph_colors'])
-        self.graph_colors.grid(row=2, column=2)
+        self.graph_colors.grid(row=2, column=2, padx=2, pady=2)
 
         ok = tkinter.ttk.Button(self.subroot, text='OK', command=lambda: self.update(connection))
-        ok.grid(row=10, column=1, columnspan=4, padx=4, pady=4, ipadx=4, ipady=4)
+        ok.bind('<Return>', lambda event: self.update(connection))
+        ok.bind('<Enter>', lambda event: self.update(connection))
+        ok.grid(row=10, column=1, columnspan=4, padx=4, pady=4)
 
         self.subroot.focus_set()
+
+    def import_sets(self, connection):
+        location = tkinter.filedialog.askopenfilename()
+        print(location)
+        try:
+            connection.execute("ATTACH '%s' AS OTHER;" % (location,))
+            connection.execute('DELETE FROM SETTINGS;')
+            connection.execute('INSERT INTO SETTINGS SELECT * FROM OTHER.SETTINGS')
+            connection.commit()
+            tkinter.messagebox.showinfo('Changes Made',
+                                    'The changes have been made.\nPlease restart the application for the changes to take effect.')
+
+        except sqlite3.OperationalError as err:
+            tkinter.messagebox.showerror('File Error', 'The location of file you have given is either corrupt\n'
+                                                       'or not a valid Fun Marathon file.')
+            print(str(err))
+
 
     def update(self, connection):
         connection.execute('''UPDATE SETTINGS SET
@@ -231,3 +251,5 @@ class Settings:
         self.subroot.destroy()
         tkinter.messagebox.showinfo('Changes Made',
                                     'The changes have been made.\nPlease restart the application for the changes to take effect.')
+
+

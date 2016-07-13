@@ -10,45 +10,53 @@ import objects
 
 # //TODO Solve the errors which occur when the starting game list is empty
 
+root = tkinter.Tk()
+root.title('Fun Marathon')
+root.iconbitmap('dsicon.ico')
+root.state('zoomed')
+
 #######################################
 # STARTUP
 #######################################
-# ask_open = tkinter.Tk()
-# ask_open.title('Open Set..')
-# ask_open.resizable(False, False)
-#
-# file_destination = ''
-#
-#
-# def get_new_file():
-#     global file_destination, ask_open
-#     file_loc = tkinter.filedialog.asksaveasfilename()
-#     if file_loc is not None:
-#         file_destination = file_loc
-#         ask_open.destroy()
-#
-#
-# def load_new_file():
-#     global file_destination, ask_open
-#     file_loc = tkinter.filedialog.askopenfilename()
-#     if file_loc is not None:
-#         file_destination = file_loc
-#         ask_open.destroy()
-#
-#
-# tkinter.Label(ask_open, text='Would you like to load a previously saved set\n'
-#                              'or would want to create a new set?').grid(row=1, column=1, columnspan=2, padx=4, pady=4)
-#
-# new_file = tkinter.ttk.Button(ask_open, text='New Set', command=get_new_file)
-# new_file.grid(row=2, column=1, padx=4, pady=4)
-# load_file = tkinter.ttk.Button(ask_open, text='Load Set', command=load_new_file)
-# load_file.grid(row=2, column=2, padx=4, pady=4)
+ask_open = tkinter.Toplevel(root)
+ask_open.title('Open Set..')
+ask_open.resizable(False, False)
 
+file_destination = ''
+
+
+def get_new_file():
+    global file_destination, ask_open
+    file_loc = tkinter.filedialog.asksaveasfilename() + '.fun_marathon'
+    if file_loc is not None:
+        file_destination = file_loc
+        ask_open.quit()
+        ask_open.destroy()
+
+
+def load_new_file():
+    global file_destination, ask_open
+    file_loc = tkinter.filedialog.askopenfilename()
+    if file_loc is not None:
+        file_destination = file_loc
+        ask_open.quit()
+        ask_open.destroy()
+
+tkinter.Label(ask_open, text='Would you like to load a previously saved set\n'
+                             'or would want to create a new set?').grid(row=1, column=1, columnspan=2, padx=4, pady=4)
+
+new_file = tkinter.ttk.Button(ask_open, text='New Set', command=get_new_file)
+new_file.grid(row=2, column=1, padx=4, pady=4)
+load_file = tkinter.ttk.Button(ask_open, text='Load Set', command=load_new_file)
+load_file.grid(row=2, column=2, padx=4, pady=4)
+
+ask_open.focus_set()
+ask_open.mainloop()
 
 #######################################
 # FUNCTIONS AND VARIABLES
 #######################################
-connection = sqlite3.connect('D:/fun_marathon.sqlite3')
+connection = sqlite3.connect(file_destination)
 
 connection.execute('''CREATE TABLE IF NOT EXISTS GAMES(
                     NAME VARCHAR(63),
@@ -123,11 +131,7 @@ def process_name(string):
 #######################################
 # MENU BAR
 #######################################
-root = tkinter.Tk()
-root.title('Fun Marathon')
-root.iconbitmap('dsicon.ico')
-root.state('zoomed')
-
+root.title(root.title() + ' - ' +file_destination)
 root.bind('<Control-n>', new_game)
 root.bind('<Control-N>', new_game)
 root.bind('<Control-s>', change_settings)
@@ -197,26 +201,27 @@ def update_game_tree(connection):
 
     columns = ' + '.join(columns)
 
-    row = 0
+    if columns != '':
+        row = 0
 
-    for (game_name, game_coordinator) in connection.execute('SELECT * FROM GAMES;'):
-        played_by = connection.execute('SELECT COUNT(*) FROM PLAYERS WHERE ' +
-                                       process_name(game_name) + ' IS NOT NULL').fetchall()
+        for (game_name, game_coordinator) in connection.execute('SELECT * FROM GAMES;'):
+            played_by = connection.execute('SELECT COUNT(*) FROM PLAYERS WHERE ' +
+                                           process_name(game_name) + ' IS NOT NULL').fetchall()
 
-        max_player, max_score = connection.execute('SELECT NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 1;' %
-                                                   (process_name(game_name), process_name(game_name), columns)).fetchall()[0]
+            max_player, max_score = connection.execute('SELECT NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 1;' %
+                                                       (process_name(game_name), process_name(game_name), columns)).fetchone() or (None, None)
 
-        game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, str(played_by[0][0]) + ' players',
-                                                  max_score, max_player), tags=(str(row%2),))
-        row += 1
+            game_tree.insert('', tkinter.END, values=(game_name, game_coordinator, str(played_by[0][0]) + ' players',
+                                                      max_score, max_player), tags=(str(row%2),))
+            row += 1
 
-    game_tree.tag_configure('0', font=('Arial, 12'))
-    game_tree.tag_configure('1', font=('Arial, 12'))
-    game_tree.tag_configure('0', background=settings['stripe_color1'])
-    game_tree.tag_configure('1', background=settings['stripe_color2'])
+        game_tree.tag_configure('0', font=('Arial, 12'))
+        game_tree.tag_configure('1', font=('Arial, 12'))
+        game_tree.tag_configure('0', background=settings['stripe_color1'])
+        game_tree.tag_configure('1', background=settings['stripe_color2'])
 
-    if len(game_tree.get_children()) > game_tree.cget('height'):
-        game_tree.config(height=len(game_tree.get_children()))
+        if len(game_tree.get_children()) > game_tree.cget('height'):
+            game_tree.config(height=len(game_tree.get_children()))
 
     game_tree.after(10000, lambda: update_game_tree(connection))
 
@@ -278,27 +283,27 @@ def update_leader_tree(connection, self_called=True):
     fam = family.get()
     gen = gender.get()
     cat = category.get()
+    if games_played != '':
+        for player in connection.execute('SELECT ID, NAME, %s, %s FROM PLAYERS WHERE UPPER(GENDER) = UPPER(%s) AND CATEGORY = %s'
+                                         ' ORDER BY %s DESC LIMIT 5;' % (games_played, columns, gen, cat, columns)):
+            try:
+                leader_tree.insert('', tkinter.END, values=((rank+1,) + player) + ('%.2f' % round(player[-1]/player[-2], 2),), tags=(str(rank % 2),))
+                rank += 1
+            except:
+                pass
 
-    for player in connection.execute('SELECT ID, NAME, %s, %s FROM PLAYERS WHERE UPPER(GENDER) = UPPER(%s) AND CATEGORY = %s'
-                                     ' ORDER BY %s DESC LIMIT 5;' % (games_played, columns, gen, cat, columns)):
-        try:
-            leader_tree.insert('', tkinter.END, values=((rank+1,) + player) + ('%.2f' % round(player[-1]/player[-2], 2),), tags=(str(rank % 2),))
-            rank += 1
-        except:
-            pass
+        leader_tree.tag_configure('0', font=('Arial', 12))
+        leader_tree.tag_configure('1', font=('Arial', 12))
+        leader_tree.tag_configure('0', background=settings['stripe_color1'])
+        leader_tree.tag_configure('1', background=settings['stripe_color2'])
 
-    leader_tree.tag_configure('0', font=('Arial', 12))
-    leader_tree.tag_configure('1', font=('Arial', 12))
-    leader_tree.tag_configure('0', background=settings['stripe_color1'])
-    leader_tree.tag_configure('1', background=settings['stripe_color2'])
-
-    if len(leader_tree.get_children()) > leader_tree.cget('height'):
-        leader_tree.config(height=len(leader_tree.get_children()))
+        if len(leader_tree.get_children()) > leader_tree.cget('height'):
+            leader_tree.config(height=len(leader_tree.get_children()))
 
     if self_called:
         leader_tree.after(10000, lambda: update_leader_tree(connection))
 
-notebook.add(main_board, text='Results', underline=0, sticky=tkinter.NS)
+notebook.add(main_board, text=settings['main_board_label'], underline=0, sticky=tkinter.NS)
 
 #######################################
 # GRAPH
@@ -324,25 +329,26 @@ if settings['graph']:
 
         columns = ' + '.join(columns)
 
-        figure.delaxes(graph)
-        graph = figure.add_subplot(111, title='Results by ID', xlabel='Player by ID', ylabel='Player Score')
-        score_data = list(connection.execute('SELECT ID, %s FROM PLAYERS;' % (columns,)))
+        if columns != '':
+            figure.delaxes(graph)
+            graph = figure.add_subplot(111, title='Results by ID', xlabel='Player by ID', ylabel='Player Score')
+            score_data = list(connection.execute('SELECT ID, %s FROM PLAYERS;' % (columns,)))
 
-        if score_data != []:
-            ids, scores = zip(*score_data)
-            graph.bar(ids, scores, color=settings['graph_colors'], align='center')
+            if score_data != []:
+                ids, scores = zip(*score_data)
+                graph.bar(ids, scores, color=settings['graph_colors'], align='center')
 
-            graph.set_xlim([100, 150])
-            graph.set_ylim([0, num_of_cols*10])
-            x_loc = MultipleLocator(2)
-            y_loc = MultipleLocator(2)
-            graph.xaxis.set_major_locator(x_loc)
-            graph.yaxis.set_major_locator(y_loc)
+                graph.set_xlim([100, 150])
+                graph.set_ylim([0, num_of_cols*10])
+                x_loc = MultipleLocator(2)
+                y_loc = MultipleLocator(2)
+                graph.xaxis.set_major_locator(x_loc)
+                graph.yaxis.set_major_locator(y_loc)
 
-            graph.axhline(sum(scores)/len(scores), color='black', linestyle='dashed', linewidth=2)
+                graph.axhline(sum(scores)/len(scores), color='black', linestyle='dashed', linewidth=2)
 
-        canvas.show()
-        canvas.get_tk_widget().grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
+            canvas.show()
+            canvas.get_tk_widget().grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
         if self_called:
             root.after(10000, lambda: update_graph(connection))
