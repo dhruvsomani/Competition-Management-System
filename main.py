@@ -77,7 +77,8 @@ connection.execute('''CREATE TABLE IF NOT EXISTS SETTINGS(
                     MAIN_BOARD_GAME_LIST_LABEL TEXT DEFAULT 'Individual Games Topper',
                     MAIN_BOARD_TOTAL_SCORES_LABEL TEXT DEFAULT 'Top Players based on All Games',
                     STRIPE_COLOR1 TEXT DEFAULT '#a0e2ff',
-                    STRIPE_COLOR2 TEXT DEFAULT '#ffffff'
+                    STRIPE_COLOR2 TEXT DEFAULT '#ffffff',
+                    SCORE_UPDATION_DURATION INTEGER DEFAULT 10000
                     );''')
 
 if list(connection.execute('SELECT * FROM SETTINGS;')) == []:
@@ -141,12 +142,13 @@ root.bind('<Control-S>', change_settings)
 menu = tkinter.Menu(tearoff=False)
 
 file_menu = tkinter.Menu(tearoff=False)
-file_menu.add_command(label='New Game', command=new_game)
+file_menu.add_command(label='New Game', command=new_game, accelerator='Ctrl + N')
+file_menu.add_command(label='Refresh', command=lambda: refresh(connection), accelerator='Ctrl + R')
 file_menu.add_separator()
 file_menu.add_command(label='Exit', command=root.destroy)
 
 settings_menu = tkinter.Menu(tearoff=False)
-settings_menu.add_command(label='Settings', command=change_settings)
+settings_menu.add_command(label='Settings', command=change_settings, accelerator='Ctrl + S')
 
 menu.add_cascade(label='File', menu=file_menu)
 menu.add_cascade(label='Settings', menu=settings_menu)
@@ -192,7 +194,7 @@ game_tree.heading('Best Player', text='Best Player')
 game_tree.column('Best Player', width=192, anchor=tkinter.CENTER)
 
 
-def update_game_tree(connection):
+def update_game_tree(connection, self_called=True):
     game_tree.delete(*game_tree.get_children())
 
     columns = []
@@ -224,7 +226,8 @@ def update_game_tree(connection):
         if len(game_tree.get_children()) > game_tree.cget('height'):
             game_tree.config(height=len(game_tree.get_children()))
 
-    game_tree.after(10000, lambda: update_game_tree(connection))
+    if self_called:
+        game_tree.after(settings['score_updation_duration'], lambda: update_game_tree(connection))
 
 
 tkinter.ttk.Label(main_board, text=settings['main_board_total_scores_label'],
@@ -302,7 +305,7 @@ def update_leader_tree(connection, self_called=True):
             leader_tree.config(height=len(leader_tree.get_children()))
 
     if self_called:
-        leader_tree.after(10000, lambda: update_leader_tree(connection))
+        leader_tree.after(settings['score_updation_duration'], lambda: update_leader_tree(connection))
 
 notebook.add(main_board, text=settings['main_board_label'], underline=0, sticky=tkinter.NS)
 
@@ -352,9 +355,20 @@ if settings['graph']:
             canvas.get_tk_widget().grid(row=3, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
         if self_called:
-            root.after(10000, lambda: update_graph(connection))
+            root.after(settings['score_updation_duration'], lambda: update_graph(connection))
 
     notebook.add(graph_board, text='Graphs', underline=0, sticky=tkinter.NS)
+
+
+def refresh(connection):
+    update_game_tree(connection, False)
+    update_leader_tree(connection, False)
+    if settings['graph']:
+        update_graph(connection, False)
+
+root.bind('<Control-r>', lambda event: refresh(connection))
+root.bind('<Control-R>', lambda event: refresh(connection))
+
 
 #######################################
 # PRE-LAUNCH

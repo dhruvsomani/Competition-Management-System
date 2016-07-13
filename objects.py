@@ -161,7 +161,7 @@ class Settings:
         self.subroot.title('Settings')
         self.subroot.resizable(False, False)
 
-        self.import_settings = tkinter.ttk.Button(self.subroot, text='Import Settings', command=lambda: self.import_sets(connection))
+        self.import_settings = tkinter.ttk.Button(self.subroot, text='Import Settings from an other game', command=lambda: self.import_sets(connection))
         self.import_settings.grid(row=1, column=1, columnspan=4, padx=4, pady=4)
 
         self.main_page_settings = tkinter.ttk.LabelFrame(self.subroot, text='Main Page Settings')
@@ -192,6 +192,11 @@ class Settings:
         self.stripe2.bind('<Double-Button-1>', lambda event: choose_color(self.stripe2))
         self.stripe2.grid(row=5, column=2, padx=2, pady=2)
 
+        tkinter.Label(self.main_page_settings, text='Score Updation Duration (ms):').grid(row=6, column=1, padx=2, pady=2)
+        self.score_updation_duration = tkinter.Entry(self.main_page_settings)
+        self.score_updation_duration.insert(0, settings['score_updation_duration'])
+        self.score_updation_duration.grid(row=6, column=2, padx=2, pady=2)
+
         self.graph_settings = tkinter.ttk.LabelFrame(self.subroot, text='Graph Settings')
         self.graph_settings.grid(row=3, column=1, columnspan=4, sticky=tkinter.EW, padx=4, pady=4, ipadx=4, ipady=4)
 
@@ -206,8 +211,8 @@ class Settings:
         self.graph_colors.grid(row=2, column=2, padx=2, pady=2)
 
         ok = tkinter.ttk.Button(self.subroot, text='OK', command=lambda: self.update(connection))
-        ok.bind('<Return>', lambda event: self.update(connection))
-        ok.bind('<Enter>', lambda event: self.update(connection))
+        # ok.bind('<Return>', lambda event: self.update(connection))
+        # ok.bind('<Enter>', lambda event: self.update(connection))
         ok.grid(row=10, column=1, columnspan=4, padx=4, pady=4)
 
         self.subroot.focus_set()
@@ -226,7 +231,6 @@ class Settings:
         except sqlite3.OperationalError as err:
             tkinter.messagebox.showerror('File Error', 'The location of file you have given is either corrupt\n'
                                                        'or not a valid Fun Marathon file.')
-            print(str(err))
 
 
     def update(self, connection):
@@ -238,7 +242,8 @@ class Settings:
                             MAIN_BOARD_GAME_LIST_LABEL = ?,
                             MAIN_BOARD_TOTAL_SCORES_LABEL = ?,
                             STRIPE_COLOR1 = ?,
-                            STRIPE_COLOR2 = ?;''',
+                            STRIPE_COLOR2 = ?,
+                            SCORE_UPDATION_DURATION = ?;''',
                            ('vista',
                             self.graph_toggle.get(),
                             self.graph_colors.get(),
@@ -246,10 +251,9 @@ class Settings:
                             self.main_board_game_list_label.get(),
                             self.main_board_total_scores_label.get(),
                             self.stripe1.cget('background'),
-                            self.stripe2.cget('background')))
+                            self.stripe2.cget('background'),
+                            self.score_updation_duration.get()))
         connection.commit()
         self.subroot.destroy()
         tkinter.messagebox.showinfo('Changes Made',
                                     'The changes have been made.\nPlease restart the application for the changes to take effect.')
-
-
