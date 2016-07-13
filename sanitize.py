@@ -1,4 +1,5 @@
 import sqlite3
+
 def sanitize(file, database):
     file = open(file)
 
@@ -12,5 +13,4 @@ def sanitize(file, database):
     connection.executemany('INSERT INTO PLAYERS (ID, NAME, GENDER, CATEGORY) VALUES(?, ?, ?, ?)', players)
     connection.commit()
 
-
-sanitize('E:\\data.txt', 'D:\\fun_marathon.sqlite3')
+sanitize('E:\\data.txt', 'D:\\fun_marathon.fun_marathon')

@@ -21,6 +21,7 @@ root.state('zoomed')
 ask_open = tkinter.Toplevel(root)
 ask_open.title('Open Set..')
 ask_open.resizable(False, False)
+ask_open.overrideredirect(0)
 
 file_destination = ''
 
@@ -72,7 +73,7 @@ connection.execute('''CREATE TABLE IF NOT EXISTS SETTINGS(
                     THEME TEXT DEFAULT 'vista',
                     GRAPH INT DEFAULT 1,
                     GRAPH_COLORS TEXT DEFAULT 'rbygc',
-                    MAIN_BOARD_LABEL TEXT DEFAULT 'LIVE SCORES',
+                    MAIN_BOARD_LABEL TEXT DEFAULT 'Live Scores',
                     MAIN_BOARD_GAME_LIST_LABEL TEXT DEFAULT 'Individual Games Topper',
                     MAIN_BOARD_TOTAL_SCORES_LABEL TEXT DEFAULT 'Top Players based on All Games',
                     STRIPE_COLOR1 TEXT DEFAULT '#a0e2ff',

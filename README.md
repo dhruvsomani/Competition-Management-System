@@ -5,9 +5,8 @@ played by the same individuals or teams.
 First of all, **the software is in beta**. If you are trying to use it for your own personal purposes, you're responsible for it.
 Changes, suggestions and edits are welcome.
 
-The software has an issue which will be solved in future versions. The problem is that you currently need to add the players or teams
-by editing the **SQLite Database** which is saved as `D:\fun_marathon.sqlite3` on your computer (**Windows**). There's a table `players`. Add you players to
-it manually. I hope to resolve this fallacy in later editions of the software.
+The software has an issue which will be solved in future versions. Add you players to it manually in the **SQLite Database (Table Players)**.
+I hope to resolve this fallacy in later editions of the software.
 
 An executable file will be available soon.
 
