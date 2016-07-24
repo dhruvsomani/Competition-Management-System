@@ -11,11 +11,9 @@ import sqlite3
 def process_name(string):
     return 'game_' + string.replace(' ', '_').replace("'", '').replace('"', '')
 
-def choose_color(widget):
-    color = tkinter.colorchooser.askcolor('light blue')
-    widget.config(background=color[-1])
-
-
+#######################################
+# OBJECTS AND CLASSES
+#######################################
 class Game(object):
     def __init__(self, name, coordinator, connection, new=True):
         '''
@@ -168,32 +166,32 @@ class Settings:
         self.main_page_settings.grid(row=2, column=1, columnspan=4, padx=4, pady=4, ipadx=4, ipady=4)
 
         tkinter.Label(self.main_page_settings, text='Main Board Heading:').grid(row=1, column=1, padx=2, pady=2)
-        self.main_board_label = tkinter.Entry(self.main_page_settings, width=32)
+        self.main_board_label = tkinter.ttk.Entry(self.main_page_settings, width=32)
         self.main_board_label.insert(0, settings['main_board_label'])
         self.main_board_label.grid(row=1, column=2, padx=2, pady=2)
 
         tkinter.Label(self.main_page_settings, text='Main Board Games List Heading:').grid(row=2, column=1, padx=2, pady=2)
-        self.main_board_game_list_label = tkinter.Entry(self.main_page_settings, width=32)
+        self.main_board_game_list_label = tkinter.ttk.Entry(self.main_page_settings, width=32)
         self.main_board_game_list_label.insert(0, settings['main_board_game_list_label'])
         self.main_board_game_list_label.grid(row=2, column=2, padx=2, pady=2)
 
         tkinter.Label(self.main_page_settings, text='Main Board Total Scores Heading:').grid(row=3, column=1, padx=2, pady=2)
-        self.main_board_total_scores_label = tkinter.Entry(self.main_page_settings, width=32)
+        self.main_board_total_scores_label = tkinter.ttk.Entry(self.main_page_settings, width=32)
         self.main_board_total_scores_label.insert(0, settings['main_board_total_scores_label'])
         self.main_board_total_scores_label.grid(row=3, column=2, padx=2, pady=2)
 
         tkinter.Label(self.main_page_settings, text='Stripe Color 1:').grid(row=4, column=1, padx=2, pady=2)
-        self.stripe1 = tkinter.Label(self.main_page_settings, width=24, bg=settings['stripe_color1'])
-        self.stripe1.bind('<Double-Button-1>', lambda event: choose_color(self.stripe1))
+        self.stripe1 = tkinter.ttk.Label(self.main_page_settings, width=24, background=settings['stripe_color1'])
+        self.stripe1.bind('<Double-Button-1>', lambda event: self.choose_color(self.stripe1))
         self.stripe1.grid(row=4, column=2, padx=2, pady=2)
 
         tkinter.Label(self.main_page_settings, text='Stripe Color 2:').grid(row=5, column=1)
-        self.stripe2 = tkinter.Label(self.main_page_settings, width=24, bg=settings['stripe_color2'])
-        self.stripe2.bind('<Double-Button-1>', lambda event: choose_color(self.stripe2))
+        self.stripe2 = tkinter.ttk.Label(self.main_page_settings, width=24, background=settings['stripe_color2'])
+        self.stripe2.bind('<Double-Button-1>', lambda event: self.choose_color(self.stripe2))
         self.stripe2.grid(row=5, column=2, padx=2, pady=2)
 
-        tkinter.Label(self.main_page_settings, text='Score Updation Duration (ms):').grid(row=6, column=1, padx=2, pady=2)
-        self.score_updation_duration = tkinter.Entry(self.main_page_settings)
+        tkinter.ttk.Label(self.main_page_settings, text='Score Updation Duration (ms):').grid(row=6, column=1, padx=2, pady=2)
+        self.score_updation_duration = tkinter.ttk.Entry(self.main_page_settings)
         self.score_updation_duration.insert(0, settings['score_updation_duration'])
         self.score_updation_duration.grid(row=6, column=2, padx=2, pady=2)
 
@@ -202,13 +200,21 @@ class Settings:
 
         tkinter.Label(self.graph_settings, text='Show Graph:').grid(row=1, column=1, padx=2, pady=2)
         self.graph_toggle = tkinter.IntVar(value=settings['graph'])
-        self.show_graph = tkinter.Checkbutton(self.graph_settings, variable=self.graph_toggle)
+        self.show_graph = tkinter.ttk.Checkbutton(self.graph_settings, variable=self.graph_toggle)
         self.show_graph.grid(row=1, column=2, padx=2, pady=2)
 
         tkinter.Label(self.graph_settings, text='Graph Colors:').grid(row=2, column=1, padx=2, pady=2)
-        self.graph_colors = tkinter.Entry(self.graph_settings)
+        self.graph_colors = tkinter.ttk.Entry(self.graph_settings)
         self.graph_colors.insert(0, settings['graph_colors'])
         self.graph_colors.grid(row=2, column=2, padx=2, pady=2)
+
+        self.indv_board_settings = tkinter.ttk.LabelFrame(self.subroot, text='Individual Score Search')
+        self.indv_board_settings.grid(row=4, column=1, columnspan=4, sticky=tkinter.EW, padx=4, pady=4, ipadx=4, ipady=4)
+
+        tkinter.Label(self.indv_board_settings, text='Show Individual Score Search:').grid(row=1, column=1, padx=2, pady=2)
+        self.indv_board_toggle = tkinter.IntVar(value=settings['indv_board'])
+        self.show_graph = tkinter.ttk.Checkbutton(self.indv_board_settings, variable=self.indv_board_toggle)
+        self.show_graph.grid(row=1, column=2, padx=2, pady=2)
 
         ok = tkinter.ttk.Button(self.subroot, text='OK', command=lambda: self.update(connection))
         # ok.bind('<Return>', lambda event: self.update(connection))
@@ -238,6 +244,7 @@ class Settings:
                             THEME = ?,
                             GRAPH = ?,
                             GRAPH_COLORS = ?,
+                            INDV_BOARD = ?,
                             MAIN_BOARD_LABEL = ?,
                             MAIN_BOARD_GAME_LIST_LABEL = ?,
                             MAIN_BOARD_TOTAL_SCORES_LABEL = ?,
@@ -247,13 +254,18 @@ class Settings:
                            ('vista',
                             self.graph_toggle.get(),
                             self.graph_colors.get(),
+                            self.indv_board_toggle.get(),
                             self.main_board_label.get(),
                             self.main_board_game_list_label.get(),
                             self.main_board_total_scores_label.get(),
-                            self.stripe1.cget('background'),
-                            self.stripe2.cget('background'),
+                            str(self.stripe1.cget('background')),
+                            str(self.stripe2.cget('background')),
                             self.score_updation_duration.get()))
         connection.commit()
         self.subroot.destroy()
         tkinter.messagebox.showinfo('Changes Made',
                                     'The changes have been made.\nPlease restart the application for the changes to take effect.')
+
+    def choose_color(self, widget):
+        color = tkinter.colorchooser.askcolor(parent=self.subroot)
+        widget.config(background=color[-1])
