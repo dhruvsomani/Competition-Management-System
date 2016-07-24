@@ -1,13 +1,20 @@
+# Fun Marathon
+# This repository contains the source code for a software, Fun Marathon which is designed to host and manage scores of
+# many games which are played by the same individuals or teams.
+
+# author: Dhruv Somani
+# version: 1.0
+
 import tkinter
 import tkinter.ttk
 import tkinter.tix
 import tkinter.filedialog
 import tkinter.messagebox
 import sqlite3
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.ticker import MultipleLocator
-from PIL import ImageTk, Image
+from PIL import Image, ImageTk
 
 import objects
 import widgets
@@ -500,7 +507,7 @@ if settings['indv_board']:
 
 
     def update_indv_board(details):
-        if details != None:
+        if details is not None:
             indv_scores_tree.delete(*indv_scores_tree.get_children())
 
             indv_scores_tree.insert('', tkinter.END, values=('ID', details.pop('id')), tags=(0,))
