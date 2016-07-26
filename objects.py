@@ -165,35 +165,40 @@ class Settings:
         self.main_page_settings = tkinter.ttk.LabelFrame(self.subroot, text='Main Page Settings')
         self.main_page_settings.grid(row=2, column=1, columnspan=4, padx=4, pady=4, ipadx=4, ipady=4)
 
-        tkinter.Label(self.main_page_settings, text='Main Board Heading:').grid(row=1, column=1, padx=2, pady=2)
+        tkinter.Label(self.main_page_settings, text='Title:').grid(row=1, column=1, padx=2, pady=2)
         self.main_board_label = tkinter.ttk.Entry(self.main_page_settings, width=32)
-        self.main_board_label.insert(0, settings['main_board_label'])
+        self.main_board_label.insert(0, settings['mainboard_label'])
         self.main_board_label.grid(row=1, column=2, padx=2, pady=2)
 
-        tkinter.Label(self.main_page_settings, text='Main Board Games List Heading:').grid(row=2, column=1, padx=2, pady=2)
+        tkinter.Label(self.main_page_settings, text='Gameboard Title:').grid(row=2, column=1, padx=2, pady=2)
         self.main_board_game_list_label = tkinter.ttk.Entry(self.main_page_settings, width=32)
-        self.main_board_game_list_label.insert(0, settings['main_board_game_list_label'])
+        self.main_board_game_list_label.insert(0, settings['gameboard_label'])
         self.main_board_game_list_label.grid(row=2, column=2, padx=2, pady=2)
 
-        tkinter.Label(self.main_page_settings, text='Main Board Total Scores Heading:').grid(row=3, column=1, padx=2, pady=2)
+        tkinter.Label(self.main_page_settings, text='Leaderboard Title:').grid(row=3, column=1, padx=2, pady=2)
         self.main_board_total_scores_label = tkinter.ttk.Entry(self.main_page_settings, width=32)
-        self.main_board_total_scores_label.insert(0, settings['main_board_total_scores_label'])
+        self.main_board_total_scores_label.insert(0, settings['leaderboard_label'])
         self.main_board_total_scores_label.grid(row=3, column=2, padx=2, pady=2)
 
-        tkinter.Label(self.main_page_settings, text='Stripe Color 1:').grid(row=4, column=1, padx=2, pady=2)
+        tkinter.Label(self.main_page_settings, text='Number of Ranks:').grid(row=4, column=1, padx=2, pady=2)
+        self.num_of_ranks = tkinter.ttk.Entry(self.main_page_settings, width=32)
+        self.num_of_ranks.insert(0, settings['num_of_ranks'])
+        self.num_of_ranks.grid(row=4, column=2, padx=2, pady=2)
+
+        tkinter.Label(self.main_page_settings, text='Stripe Color 1:').grid(row=5, column=1, padx=2, pady=2)
         self.stripe1 = tkinter.ttk.Label(self.main_page_settings, width=24, background=settings['stripe_color1'])
         self.stripe1.bind('<Double-Button-1>', lambda event: self.choose_color(self.stripe1))
-        self.stripe1.grid(row=4, column=2, padx=2, pady=2)
+        self.stripe1.grid(row=5, column=2, padx=2, pady=2)
 
-        tkinter.Label(self.main_page_settings, text='Stripe Color 2:').grid(row=5, column=1)
+        tkinter.Label(self.main_page_settings, text='Stripe Color 2:').grid(row=6, column=1)
         self.stripe2 = tkinter.ttk.Label(self.main_page_settings, width=24, background=settings['stripe_color2'])
         self.stripe2.bind('<Double-Button-1>', lambda event: self.choose_color(self.stripe2))
-        self.stripe2.grid(row=5, column=2, padx=2, pady=2)
+        self.stripe2.grid(row=6, column=2, padx=2, pady=2)
 
-        tkinter.ttk.Label(self.main_page_settings, text='Score Updation Duration (ms):').grid(row=6, column=1, padx=2, pady=2)
+        tkinter.ttk.Label(self.main_page_settings, text='Score Updation Duration (ms):').grid(row=7, column=1, padx=2, pady=2)
         self.score_updation_duration = tkinter.ttk.Entry(self.main_page_settings)
         self.score_updation_duration.insert(0, settings['score_updation_duration'])
-        self.score_updation_duration.grid(row=6, column=2, padx=2, pady=2)
+        self.score_updation_duration.grid(row=7, column=2, padx=2, pady=2)
 
         self.graph_settings = tkinter.ttk.LabelFrame(self.subroot, text='Graph Settings')
         self.graph_settings.grid(row=3, column=1, columnspan=4, sticky=tkinter.EW, padx=4, pady=4, ipadx=4, ipady=4)
@@ -244,20 +249,23 @@ class Settings:
                             THEME = ?,
                             GRAPH = ?,
                             GRAPH_COLORS = ?,
+                            MAINBOARD_LABEL = ?,
+                            GAMEBOARD_LABEL = ?,
+                            LEADERBOARD_LABEL = ?,
+                            NUM_OF_RANKS = ?,
                             INDV_BOARD = ?,
-                            MAIN_BOARD_LABEL = ?,
-                            MAIN_BOARD_GAME_LIST_LABEL = ?,
-                            MAIN_BOARD_TOTAL_SCORES_LABEL = ?,
                             STRIPE_COLOR1 = ?,
                             STRIPE_COLOR2 = ?,
                             SCORE_UPDATION_DURATION = ?;''',
+                           
                            ('vista',
                             self.graph_toggle.get(),
                             self.graph_colors.get(),
-                            self.indv_board_toggle.get(),
                             self.main_board_label.get(),
                             self.main_board_game_list_label.get(),
                             self.main_board_total_scores_label.get(),
+                            self.num_of_ranks.get(),
+                            self.indv_board_toggle.get(),
                             str(self.stripe1.cget('background')),
                             str(self.stripe2.cget('background')),
                             self.score_updation_duration.get()))
