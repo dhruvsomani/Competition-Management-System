@@ -257,7 +257,7 @@ class Settings:
                             STRIPE_COLOR1 = ?,
                             STRIPE_COLOR2 = ?,
                             SCORE_UPDATION_DURATION = ?;''',
-                           
+
                            ('vista',
                             self.graph_toggle.get(),
                             self.graph_colors.get(),

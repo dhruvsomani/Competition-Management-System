@@ -16,6 +16,7 @@ This file contains the main code which will run on execution. Run this file.
 ## objects.py
 This file contains the class `Game` which represents a singular game (*not a set of games*) and also a `tkinter.frame` which will be
 inserted in the `tkinter.ttk.Notebook` in the `main.py`.
+It also contains the class `Settings` which represents a single settings window for changing the settings.
 
 ## sanitize.py
 This file contains a single function to help recognize data and insert it into the database accordingly. It scrapes the data from a file.
