@@ -37,7 +37,7 @@ class Game(object):
         # DATABASE
         #######################################
         if new:
-            connection.execute('ALTER TABLE PLAYERS ADD ' + process_name(self.name) + ' INTEGER;')
+            connection.execute('ALTER TABLE PLAYERS ADD \'' + process_name(self.name) + '\' INTEGER;')
             connection.execute('INSERT INTO GAMES VALUES(?, ?);', (name, coordinator))
             connection.commit()
 

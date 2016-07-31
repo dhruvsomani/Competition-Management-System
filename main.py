@@ -11,9 +11,9 @@ import tkinter.tix
 import tkinter.filedialog
 import tkinter.messagebox
 import sqlite3
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-from matplotlib.ticker import MultipleLocator
+# from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+# from matplotlib.figure import Figure
+# from matplotlib.ticker import MultipleLocator
 from PIL import Image, ImageTk
 
 import objects
@@ -21,7 +21,7 @@ import widgets
 
 root = tkinter.tix.Tk()
 root.title('Fun Marathon')
-root.iconbitmap('resources/dsicon.ico')
+root.iconbitmap('E:\\Python\\Fun Marathon\\resources\\dsicon.ico')
 root.state('zoomed')
 
 #######################################
@@ -82,7 +82,7 @@ connection.execute('''CREATE TABLE IF NOT EXISTS PLAYERS(
 
 connection.execute('''CREATE TABLE IF NOT EXISTS SETTINGS(
                     THEME               TEXT        DEFAULT 'vista',
-                    GRAPH               INTEGER     DEFAULT 1,
+                    GRAPH               INTEGER     DEFAULT 0,
                     GRAPH_COLORS        TEXT        DEFAULT 'rbygc',
                     INDV_BOARD          INTEGER     DEFAULT 1,
                     MAINBOARD_LABEL     TEXT        DEFAULT 'RESULTS',
@@ -215,9 +215,9 @@ gameboard = tkinter.Frame()
 tkinter.ttk.Label(gameboard, text=settings['mainboard_label'],
                   font=('Arial', 48)).grid(row=1, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
-img_tk = ImageTk.PhotoImage(Image.open('resources/50-ann2.jpg'))
-img_label1 = tkinter.Label(gameboard, image=img_tk, compound=tkinter.RIGHT, anchor=tkinter.E)
-img_label1.grid(row=1, column=3, rowspan=2, sticky=tkinter.E)
+# img_tk = ImageTk.PhotoImage(Image.open('resources/50-ann2.jpg'))
+# img_label1 = tkinter.Label(gameboard, image=img_tk, compound=tkinter.RIGHT, anchor=tkinter.E)
+# img_label1.grid(row=1, column=3, rowspan=2, sticky=tkinter.E)
 
 tkinter.ttk.Label(gameboard, text=settings['gameboard_label'],
                   font=('Arial', 24)).grid(row=2, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
@@ -309,13 +309,13 @@ leader_tree.column('Average', width=180, anchor=tkinter.CENTER)
 
 
 sort_by = tkinter.ttk.Labelframe(leaderboard, text='Filter Options')
-family = tkinter.StringVar(value='"BOTH"')
+# family = tkinter.StringVar(value='"BOTH"')
 gender = tkinter.StringVar(value='"GENDER"')
 category = tkinter.StringVar(value='"CATEGORY"')
 
-tkinter.Radiobutton(sort_by, text='Both', variable=family, value='"BOTH"', indicatoron=False, width=8).grid(row=1, column=1, padx=4, pady=2)
-tkinter.Radiobutton(sort_by, text='Somanis', variable=family, value='\'somani\'', indicatoron=False, width=8).grid(row=1, column=2, padx=4, pady=2)
-tkinter.Radiobutton(sort_by, text='Bahetis', variable=family, value='\'baheti\'', indicatoron=False, width=8).grid(row=1, column=3, padx=4, pady=2)
+# tkinter.Radiobutton(sort_by, text='Both', variable=family, value='"BOTH"', indicatoron=False, width=8).grid(row=1, column=1, padx=4, pady=2)
+# tkinter.Radiobutton(sort_by, text='Somanis', variable=family, value='\'somani\'', indicatoron=False, width=8).grid(row=1, column=2, padx=4, pady=2)
+# tkinter.Radiobutton(sort_by, text='Bahetis', variable=family, value='\'baheti\'', indicatoron=False, width=8).grid(row=1, column=3, padx=4, pady=2)
 
 tkinter.Radiobutton(sort_by, text='Both', variable=gender, value='"GENDER"', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=1, padx=4, pady=2)
 tkinter.Radiobutton(sort_by, text='Male', variable=gender, value='\'M\'', indicatoron=False, width=8, command=lambda: update_leader_tree(connection, False)).grid(row=2, column=2, padx=4, pady=2)
@@ -342,7 +342,7 @@ def update_leader_tree(connection, self_called=True):
     games_played = ' + '.join(games_played)
     rank = 0
 
-    fam = family.get()
+    # fam = family.get()
     gen = gender.get()
     cat = category.get()
     if games_played != '':
