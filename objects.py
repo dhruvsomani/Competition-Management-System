@@ -17,7 +17,7 @@ def process_name(string):
 class Game(object):
     def __init__(self, name, coordinator, connection, new=True):
         '''
-        The Game class is the object representing a singles game.
+        The Game class is the object representing a single game.
         It is a single game which may be played by a team or an individual.
         The scores of many games are used to show the score on the Results page.
         :param name: name of the game to be shown to the users; 
@@ -46,7 +46,7 @@ class Game(object):
         #######################################
         self.frame = tkinter.Frame()
 
-        tkinter.Label(self.frame, text=(self.name+' by '+self.coordinator),
+        tkinter.Label(self.frame, text=(self.name),
                       font=('Arial', 36)).grid(row=1, column=1, columnspan=3, padx=4, pady=4, ipadx=4, ipady=4)
 
         self.tree = tkinter.ttk.Treeview(self.frame, columns=('ID', 'Name', 'Score'), show='headings',
@@ -133,9 +133,12 @@ class Game(object):
 
         columns = ' + '.join(columns)
 
-        for (id, player, score) in connection.execute('SELECT ID, NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 5' %
-                                                      (process_name(self.name), process_name(self.name), columns)):
-            self.tree.insert('', tkinter.END, values=(id, player, score))
+        try:
+            for (id, player, score) in connection.execute('SELECT ID, NAME, %s FROM PLAYERS ORDER BY %s DESC, %s DESC LIMIT 5' %
+                                                          (process_name(self.name), process_name(self.name), columns)):
+                self.tree.insert('', tkinter.END, values=(id, player, score))
+        except:
+            pass
 
 
 class Settings:
@@ -237,12 +240,11 @@ class Settings:
             connection.execute('INSERT INTO SETTINGS SELECT * FROM OTHER.SETTINGS')
             connection.commit()
             tkinter.messagebox.showinfo('Changes Made',
-                                    'The changes have been made.\nPlease restart the application for the changes to take effect.')
+                                        'The changes have been made.\nPlease restart the application for the changes to take effect.')
 
-        except sqlite3.OperationalError as err:
+        except sqlite3.OperationalError:
             tkinter.messagebox.showerror('File Error', 'The location of file you have given is either corrupt\n'
                                                        'or not a valid Fun Marathon file.')
-
 
     def update(self, connection):
         connection.execute('''UPDATE SETTINGS SET

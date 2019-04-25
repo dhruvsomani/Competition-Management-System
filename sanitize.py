@@ -10,7 +10,14 @@ def sanitize(file, database):
         players[row][0] = int(players[row][0])
 
     connection = sqlite3.connect(database)
-    connection.executemany('INSERT INTO PLAYERS (ID, NAME, GENDER, CATEGORY) VALUES(?, ?, ?, ?)', players)
+    print(players)
+    for player in players:
+        try:
+            connection.execute('INSERT INTO PLAYERS (ID, NAME, GENDER, CATEGORY) VALUES(?, ?, ?, ?)', player)
+            connection.commit()
+        except:
+            pass
+        print(player[0])
     connection.commit()
 
-sanitize('E:\\data.txt', 'D:\\fun_marathon.fun_marathon')
+sanitize('D:\\data.txt', 'D:\\fun_marathon.fun_marathon')
