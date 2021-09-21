@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="refresh" content="10">
+		<title>Fun Marathon</title>
+
+		<!-- <link href="bootstrap.min.css" rel="stylesheet"> -->
+
+		<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+		<style>
+
+		.table-striped>tbody>tr:nth-child(odd)>td, 
+		.table-striped>tbody>tr:nth-child(odd)>th {
+		   background-color: #fbe3fc;
+		 }
+
+		.table-striped>tbody>tr:nth-child(even)>td, 
+		.table-striped>tbody>tr:nth-child(even)>th {
+		   background-color: #ffffff;
+		 }
+
+		</style>
+	</head>
+
+	<body>
+		<div class="card text-white bg-dark">
+			<b><center><font size="10">Pooja Prakash Premier League</font></center></b>
+		</div>
+		<div class="card text-dark">
+			<b><center><font size="8">LEADERBOARD</font></center></b>
+		</div>
+		<table class="table table-bordered table-hover table-striped">
+			<thead class="">
+				<tr class="success">
+					<th style="text-align:center; padding: 3px;"><font size="8">Rank</th>
+					<th style="text-align:center; padding: 3px;"><font size="8">ID</th>
+					<th style="text-align:center; padding: 3px;"><font size="8">Name</th>
+					<th style="text-align:center; padding: 3px;"><font size="8">Total Score</th>
+					<th style="text-align:center; padding: 3px;"><font size="8">Games</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for leader in leader_list %}
+					<tr class="active">
+						<td align="center" style="padding: 2px;"><font size="6">{{leader.4}}</font></td>
+						<td align="center" style="padding: 2px;"><font size="6">{{leader.0}}</font></td>
+						<td align="center" style="padding: 2px;"><font size="6">{{leader.1}}</td>
+						<td align="center" style="padding: 2px;"><font size="6">{{leader.2}}</td>
+						<td align="center" style="padding: 2px;"><font size="6">{{leader.3}}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+	<!-- <script src="bootstrap.min.js"></script> -->
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	</body>
+</html>

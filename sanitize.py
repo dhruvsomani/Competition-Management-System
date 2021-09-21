@@ -1,23 +1,26 @@
 import sqlite3
 
 def sanitize(file, database):
-    file = open(file)
+	file = open(file)
 
-    players = file.read()
-    players = players.split('\n')
-    for row in range(len(players)):
-        players[row] = players[row].split('\t')
-        players[row][0] = int(players[row][0])
+	players = file.read()
+	players = players.split('\n')
 
-    connection = sqlite3.connect(database)
-    print(players)
-    for player in players:
-        try:
-            connection.execute('INSERT INTO PLAYERS (ID, NAME, GENDER, CATEGORY) VALUES(?, ?, ?, ?)', player)
-            connection.commit()
-        except:
-            pass
-        print(player[0])
-    connection.commit()
+	for i in range(len(players)):
+		players[i] = players[i].split('\t')
 
-sanitize('D:\\data.txt', 'D:\\fun_marathon.fun_marathon')
+	players.pop()
+
+	connection = sqlite3.connect(database)
+	
+	for player in players:
+		try:
+			connection.execute('INSERT INTO PLAYERS (ID, NAME) VALUES(?, ?)', (player[0], player[1]))
+			connection.commit()
+		except:
+			pass
+
+		print(player[0], player[1])
+	connection.commit()
+
+sanitize('F:\\Programming\\Fun Marathon\\participants.txt', 'F:\\Programming\\Fun Marathon\\final.fun_marathon')

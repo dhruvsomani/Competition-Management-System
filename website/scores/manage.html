@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Fun Marathon</title>
+    </head>
+
+    <body>
+        <center>
+            <h1><font face="Aharoni" size="20">Fun Marathon</font></h1>
+
+            <br>
+
+            <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js">
+                $("score-form").submit(
+                    function(e) {
+                        e.preventDefault();
+                    }
+                );
+            </script>
+
+            <script>
+                function getCookie(cname) {
+                    var name = cname + "=";
+                    var ca = document.cookie.split(';');
+                    for(var i = 0; i <ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0)==' ') {
+                            c = c.substring(1);
+                        }
+                        if (c.indexOf(name) == 0) {
+                            return c.substring(name.length,c.length);
+                        }
+                    }
+                    return "";
+                }
+
+                function validateForm() {
+                    var id = parseInt(document.forms["score-form"]["id"].value, 10);
+                    var score = parseFloat(document.forms["score-form"]["score"].value, 10);
+
+                    if (id < 101 || id > 320 || (id > 189 && id < 201) || isNaN(id)) {
+                        alert("The ID is incorrect.\nOnly ID's between 101 and 155 and between 201 and 255 are allowed.");
+                        return false;
+                        }
+
+                    if (score < 0 || score > 10 || isNaN(score)) {
+                        alert("The score is incorrect.\nOnly scores between 0 to 10 are allowed.\nYou entered " + score + ".");
+                        return false;
+                        }
+
+                    $.ajax({
+                        url: "../player_data/",
+                        type: "POST",
+                        data: {
+                            csrfmiddlewaretoken: getCookie("csrftoken"),
+                            id: id
+                        },
+                        success: function(json) {
+                            var success = alert("You entered the following data." + "\n" +
+                                "ID: " + json["id"] + "\n" +
+                                "Name: " + json["name"] + "\n" +
+                                "Score: " + score + "\n" +
+                                "Game: " + "{{game}}");
+
+                        },
+                        error: function(jqXHR, textStatus, errorThrown){
+                            alert("Error");
+                            success = false;}
+                    });
+
+                }
+            </script>
+
+            <form id="score-form" name="score-form" action="../update/" method="post" onsubmit="return validateForm()">
+                {% csrf_token %}
+                <table cellpadding="4">
+                    <tr>
+                        <td>Select Game:</td>
+                        <td>
+                            <select name="game">
+
+                                {% for game in games_list %}
+                                    <option value="{{game}}">{{ game }}</option>
+                                {% endfor %}
+
+                            </select>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td><label for="id">Enter ID:</label></td>
+                        <td><input type="number" id="id" name="id" autocomplete="off"></td>
+                    </tr>
+
+                    <tr>
+                        <td><label for="score">Enter Score:</label></td>
+                        <td><input type="number" step="0.5" id="score" name="score" autocomplete="off"></td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="2" align="center"><input type="submit" id="button" value="Submit"></td>
+                    </tr>
+                </table>
+            </form>
+
+            <br><br><br>
+
+            <a href="../../">Go Back</a>
+
+            <script>
+                document.getElementById("id").focus();
+            </script>
+
+        </center>
+    </body>
+</html>

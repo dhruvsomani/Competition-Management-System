@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Fun Marathon</title>
+
+		<!-- Memory Caching -->
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js">
+		</script>
+		
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+		<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+		<style>
+			body {
+				margin-top: 1em;
+			}
+			.card {
+			   width: 90%;
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<center>
+			<div class="card text-white bg-dark">
+				<h1>Pooja Prakash Premier League</h1>
+			</div>
+
+			<br>
+
+			<div class="card border-info">
+				<div class="card-header bg-info">
+					<h3 class="card-title text-white">Select Game:</h3>
+				</div>
+
+				<div class="card-body">
+						<table class="table table-striped border-info table-bordered table-sm">
+						{% for game in games_list %}
+							<tr>
+							<td align="center">
+							<h5><a href="game/{{game}}" style="color: #000000;">{{game}}</a></h5>
+							</td>
+							<td align="center">
+							<h5><a href="leaderboard/{{game}}" style="color: #000000;">LB</a></h5>
+							</td>
+							</tr>
+						{% endfor %}
+						</table>
+				</div>
+
+			</div>
+
+			<br>
+
+			<div class="card border-success">
+				<div class="card-header bg-success">
+					<h3 class="card-title border-success"><a href="leaderboard" class='text-white'>Leaderboard</a></h3>
+				</div>
+			</div>
+
+			<br>
+
+			<div class="card border-danger">
+				<div class="card-header bg-danger">
+					<h3 class="card-title border-danger"><a href="coupleboard" class='text-white'>Coupleboard</a></h3>
+				</div>
+			</div>
+
+			<br>
+
+		</center>
+	</body>
+</html>
